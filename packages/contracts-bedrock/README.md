@@ -77,6 +77,14 @@ yarn build
 yarn test
 ```
 
+#### Running Echidna tests
+
+You must have [Echidna](https://github.com/crytic/echidna) installed.
+
+```shell
+./scripts/echnida-fuzz.sh
+```
+
 ### Deployment
 
 #### Configuration

@@ -10,6 +10,11 @@ import 'hardhat-deploy'
 // Hardhat tasks
 import './tasks'
 
+let bytecodeHash = 'none'
+if (process.env.FOUNDRY_PROFILE === 'echidna') {
+  bytecodeHash = 'ipfs'
+}
+
 const config: HardhatUserConfig = {
   networks: {
     devnetL1: {
@@ -361,7 +366,7 @@ const config: HardhatUserConfig = {
     ],
     settings: {
       metadata: {
-        bytecodeHash: 'none',
+        bytecodeHash,
       },
       outputSelection: {
         '*': {
