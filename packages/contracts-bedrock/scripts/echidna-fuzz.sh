@@ -29,7 +29,7 @@ if [ -z "$(ls -A ./artifacts/build-info 2> /dev/null)" ]; then
    exit 1
 fi
 
-FILES=(./contracts/fuzz_tests/*)
+FILES=(./contracts/echidna/*)
 for file in ${FILES[@]}
 do
   # We assume that the contract name is the same as the filename without the extension
