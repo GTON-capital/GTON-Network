@@ -267,6 +267,9 @@ func (s *Driver) eventLoop() {
 		case <-l2BlockCreationReqCh:
 			s.snapshot("L2 Block Creation Request")
 			l1Head := s.l1State.L1Head()
+			// This conditional is causing some tests to flake. This is because
+			// it is racing against the l1HeadSig channel. The derivation pipeline knows that there
+			// is data & has advanced, but block creation is not able to advance.
 			if l1Head == (eth.L1BlockRef{}) {
 				s.log.Info("not creating block, uninitialized L1 Head", "head_l1", l1Head)
 				break
