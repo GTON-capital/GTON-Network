@@ -58,6 +58,12 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
+    bscTestnet: {
+      chainId: 97,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
+    },
     mainnet: {
       chainId: 1,
       url: process.env.CONTRACTS_RPC_URL || '',
@@ -119,6 +125,7 @@ const config: HardhatUserConfig = {
       mainnet: process.env.ETHERSCAN_API_KEY,
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY,
+      bscTestnet: process.env.BSCSCAN_API_KEY,
     },
   },
   dodoc: {

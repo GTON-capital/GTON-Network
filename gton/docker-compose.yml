@@ -1,0 +1,168 @@
+version: '1.0'
+
+services:
+  deployer:
+    build:
+      context: ..
+      dockerfile: ./gton/docker/Dockerfile.packages
+      target: deployer
+    image: ethereumoptimism/deployer:${DOCKER_TAG_DEPLOYER:-latest}
+    entrypoint: ./deployer.sh
+    environment:
+      # Env vars for the deployment script.
+      CONTRACTS_RPC_URL: ${L1_RPC_ENDPOINT}
+      CONTRACTS_DEPLOYER_KEY: ${CONTRACTS_DEPLOYER_KEY}
+      CONTRACTS_TARGET_NETWORK: ${CONTRACTS_TARGET_NETWORK}
+    ports:
+      # expose the service to the host for getting the contract addrs
+      - ${DEPLOYER_PORT:-8080}:8081
+
+  dtl:
+    depends_on:
+      - deployer
+      - l2geth
+    build:
+      context: ..
+      dockerfile: ./gton/docker/Dockerfile.packages
+      target: data-transport-layer
+    image: ethereumoptimism/data-transport-layer:${DOCKER_TAG_DATA_TRANSPORT_LAYER:-latest}
+    # override with the dtl script and the env vars required for it
+    entrypoint: ./dtl.sh
+    env_file:
+      - ./envs/dtl.env
+    # set the rest of the env vars for the network whcih do not
+    # depend on the docker-compose setup
+    environment:
+      # used for setting the address manager address
+      URL: http://deployer:8081/addresses.json
+      # connect to the 2 layers
+      DATA_TRANSPORT_LAYER__L1_RPC_ENDPOINT: ${L1_RPC_ENDPOINT}
+      DATA_TRANSPORT_LAYER__L2_RPC_ENDPOINT: http://l2geth:8545
+      DATA_TRANSPORT_LAYER__SYNC_FROM_L2: 'false'
+      DATA_TRANSPORT_LAYER__L2_CHAIN_ID: ${L2_CHAIN_ID}
+    ports:
+      - ${DTL_PORT:-7878}:7878
+
+  l2geth:
+    depends_on:
+      - deployer
+    build:
+      context: ..
+      dockerfile: ./l2geth/Dockerfile
+    image: ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}
+    # override with the geth script and the env vars required for it
+    entrypoint: sh ./geth.sh
+    env_file:
+      - ./envs/geth.env
+    environment:
+      <<: *system-addr-env
+      ETH1_HTTP: ${L1_RPC_ENDPOINT}
+      ROLLUP_TIMESTAMP_REFRESH: 5s
+      ROLLUP_STATE_DUMP_PATH: http://deployer:8081/state-dump.latest.json
+      # connecting to the DTL
+      ROLLUP_CLIENT_HTTP: http://dtl:7878
+      ETH1_CTC_DEPLOYMENT_HEIGHT: ${L1_START_HEIGHT}
+      RETRIES: 60
+      # no need to keep this secret, only used internally to sign blocks
+      BLOCK_SIGNER_KEY: '6587ae678cf4fc9a33000cdbf9f35226b71dcc6a4684a31203241f9bcfd55d27'
+      BLOCK_SIGNER_ADDRESS: '0x00000398232E2064F896018496b4b44b3D62751F'
+
+      ROLLUP_ENFORCE_FEES: ${ROLLUP_ENFORCE_FEES:-true}
+      ROLLUP_FEE_THRESHOLD_DOWN: 0.9
+      ROLLUP_FEE_THRESHOLD_UP: 1.1
+    ports:
+      - ${L2GETH_HTTP_PORT:-8545}:8545
+      - ${L2GETH_WS_PORT:-8546}:8546
+
+  relayer:
+    depends_on:
+      - l2geth
+    deploy:
+      replicas: 0
+    build:
+      context: ..
+      dockerfile: ./gton/docker/Dockerfile.packages
+      target: message-relayer
+    image: ethereumoptimism/message-relayer:${DOCKER_TAG_MESSAGE_RELAYER:-latest}
+    entrypoint: ./relayer.sh
+    environment:
+      MESSAGE_RELAYER__L1_RPC_PROVIDER: ${L1_RPC_ENDPOINT}
+      MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
+      MESSAGE_RELAYER__L1_WALLET: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
+      RETRIES: 60
+
+  fault_detector:
+    depends_on:
+      - l2geth
+    deploy:
+      replicas: 0
+    build:
+      context: ..
+      dockerfile: ./gton/docker/Dockerfile.packages
+      target: fault-detector
+    image: ethereumoptimism/fault-detector:${DOCKER_TAG_FAULT_DETECTOR:-latest}
+    entrypoint: ./detector.sh
+    environment:
+      FAULT_DETECTOR__L1_RPC_PROVIDER: ${L1_RPC_ENDPOINT}
+      FAULT_DETECTOR__L2_RPC_PROVIDER: http://l2geth:8545
+      RETRIES: 60
+
+  verifier:
+    depends_on:
+      - deployer
+      - dtl
+      - l2geth
+    deploy:
+      replicas: 1
+    build:
+      context: ..
+      dockerfile: ./l2geth/Dockerfile
+    image: ethereumoptimism/l2geth:${DOCKER_TAG_L2GETH:-latest}
+    entrypoint: sh ./geth.sh
+    env_file:
+      - ./envs/geth.env
+    environment:
+      <<: *system-addr-env
+      ETH1_HTTP: ${L1_RPC_ENDPOINT}
+      SEQUENCER_CLIENT_HTTP: http://l2geth:8545
+      ROLLUP_STATE_DUMP_PATH: http://deployer:8081/state-dump.latest.json
+      ROLLUP_CLIENT_HTTP: http://dtl:7878
+      ROLLUP_BACKEND: 'l1'
+      ETH1_CTC_DEPLOYMENT_HEIGHT: 8
+      RETRIES: 60
+      ROLLUP_VERIFIER_ENABLE: 'true'
+    ports:
+      - ${VERIFIER_HTTP_PORT:-8547}:8545
+      - ${VERIFIER_WS_PORT:-8548}:8546
+
+  gas_oracle:
+    deploy:
+      replicas: 0
+    build:
+      context: ..
+      dockerfile: ./gas-oracle/Dockerfile
+    image: ethereumoptimism/gas-oracle:${DOCKER_TAG_GAS_ORACLE:-latest}
+    environment:
+      GAS_PRICE_ORACLE_ETHEREUM_HTTP_URL: ${L1_RPC_ENDPOINT}
+      GAS_PRICE_ORACLE_LAYER_TWO_HTTP_URL: http://l2geth:8545
+      # Default hardhat account 5
+      GAS_PRICE_ORACLE_PRIVATE_KEY: ${GAS_ORACLE_PRIVATE_KEY}
+
+  batch_submitter:
+    depends_on:
+      - deployer
+      - l2geth
+    build:
+      context: ..
+      dockerfile: ./batch-submitter/Dockerfile
+    image: ethereumoptimism/batch-submitter-service:${DOCKER_TAG_BATCH_SUBMITTER_SERVICE:-latest}
+    entrypoint: ./batch-submitter.sh
+    env_file:
+      - ./envs/batch-submitter.env
+    environment:
+      L1_ETH_RPC: ${L1_RPC_ENDPOINT}
+      L2_ETH_RPC: http://l2geth:8545
+      URL: http://deployer:8081/addresses.json
+      BATCH_SUBMITTER_SEQUENCER_PRIVATE_KEY: ${SEQUENCER_PRIVATE_KEY}
+      BATCH_SUBMITTER_PROPOSER_PRIVATE_KEY: ${PROPOSER_PRIVATE_KEY}
+      BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE: ${BATCH_SUBMITTER_SEQUENCER_BATCH_TYPE:-zlib}
