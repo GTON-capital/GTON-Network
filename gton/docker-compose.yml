@@ -45,7 +45,7 @@ services:
       # used for setting the address manager address
       URL: http://deployer:8081/addresses.json
       # connect to the 2 layers
-      DATA_TRANSPORT_LAYER__L1_RPC_ENDPOINT: ${L1_RPC_ENDPOINT}
+      DATA_TRANSPORT_LAYER__L1_RPC_ENDPOINT: ${DTL_RPC_ENDPOINT}
       DATA_TRANSPORT_LAYER__L2_RPC_ENDPOINT: http://l2geth:8545
       DATA_TRANSPORT_LAYER__SYNC_FROM_L2: 'false'
       DATA_TRANSPORT_LAYER__L2_CHAIN_ID: ${L2_CHAIN_ID}
