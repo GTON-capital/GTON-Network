@@ -8,12 +8,6 @@ const gasPrice = parseInt(process.env.GAS_PRICE, 10) || 0
 
 const config = {
   networks: {
-    bscTestnet: {
-      chainId: 97,
-      url: process.env.CONTRACTS_RPC_URL || '',
-      deploy,
-      accounts: [privateKey],
-    },
     'goerli-gton': {
       chainId: 5,
       url: process.env.CONTRACTS_RPC_URL || '',

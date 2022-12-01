@@ -64,12 +64,6 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
-    bscTestnet: {
-      chainId: 97,
-      url: process.env.CONTRACTS_RPC_URL || '',
-      deploy,
-      accounts: [privateKey],
-    },
     mainnet: {
       chainId: 1,
       url: process.env.CONTRACTS_RPC_URL || '',
