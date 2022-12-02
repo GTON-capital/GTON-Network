@@ -91,7 +91,7 @@ services:
     depends_on:
       - l2geth
     deploy:
-      replicas: 0
+      replicas: 1
     build:
       context: ..
       dockerfile: ./gton/docker/Dockerfile.packages
@@ -108,7 +108,7 @@ services:
     depends_on:
       - l2geth
     deploy:
-      replicas: 0
+      replicas: 1
     build:
       context: ..
       dockerfile: ./gton/docker/Dockerfile.packages
