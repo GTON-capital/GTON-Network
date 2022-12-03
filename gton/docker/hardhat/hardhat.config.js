@@ -24,17 +24,4 @@ const config = {
   analytics: { enabled: false },
 }
 
-if (isForkModeEnabled) {
-  console.log(`Running hardhat in a fork mode! URL: ${forkUrl}`)
-  if (forkStartingBlock) {
-    console.log(`Starting block: ${forkStartingBlock}`)
-  }
-  config.networks.hardhat.forking = {
-    url: forkUrl,
-    blockNumber: forkStartingBlock,
-  }
-} else {
-  console.log('Running with a fresh state...')
-}
-
 module.exports = config
