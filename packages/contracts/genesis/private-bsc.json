@@ -1,7 +1,7 @@
 {
-    "commit": "4f6a75d11947b33ddf61c459bfcead63e59a67db",
+    "commit": "6d3fad83f7f03d2c35fc625e81d760db578cc8f5",
     "config": {
-        "chainId": 50023,
+        "chainId": 50022,
         "homesteadBlock": 0,
         "eip150Block": 0,
         "eip155Block": 0,
