@@ -14,6 +14,12 @@ const config = {
       deploy,
       accounts: [privateKey],
     },
+    'private-bsc': {
+      chainId: 1214,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
+    },
   },
   analytics: { enabled: false },
 }
