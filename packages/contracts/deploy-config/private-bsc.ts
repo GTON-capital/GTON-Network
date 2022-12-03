@@ -1,7 +1,7 @@
 const config = {
   numDeployConfirmations: 2,
   gasPrice: 150_000_000_000,
-  l1BlockTimeSeconds: 15,
+  l1BlockTimeSeconds: 3,
   l2BlockGasLimit: 15_000_000,
   l2ChainId: 50022,
   ctcL2GasDiscountDivisor: 32,
