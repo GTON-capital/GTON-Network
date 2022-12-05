@@ -213,6 +213,10 @@ func (d *Driver) CraftBatchTx(
 			return nil, err
 		}
 
+		log.Error(
+			name+" logging batch params",
+			"Contexts", batchParams.Contexts, "Txs", batchParams.Txs,
+		)
 		// Encode the batch arguments using the configured encoding type.
 		batchArguments, err := batchParams.Serialize(d.cfg.BatchType)
 		if err != nil {
