@@ -8,13 +8,13 @@ const config = {
   ctcEnqueueGasCost: 60_000,
   sccFaultProofWindowSeconds: 604800,
   sccSequencerPublishWindowSeconds: 12592000,
-  ovmSequencerAddress: '0x7b1d60E68DF7d2821180c85A9B87DAE5b692Ea47',
-  ovmProposerAddress: '0x0e0a2852ba4f88DD516D78348Ac41f33E6BD5F7E',
+  ovmSequencerAddress: '0x958CCbEecD0ca2A30F04307a586DfcB43915f564',
+  ovmProposerAddress: '0x582E44bBf21f6Ee19D7B59bA859Cc159FdfA8BB4',
   ovmBlockSignerAddress: '0x00000398232E2064F896018496b4b44b3D62751F',
-  ovmFeeWalletAddress: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
-  ovmAddressManagerOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
-  ovmGasPriceOracleOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
-  ovmWhitelistOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
+  ovmFeeWalletAddress: '0x536059788FeD3A9874fD224Ba137d280Bb3f17FE',
+  ovmAddressManagerOwner: '0x536059788FeD3A9874fD224Ba137d280Bb3f17FE',
+  ovmGasPriceOracleOwner: '0x536059788FeD3A9874fD224Ba137d280Bb3f17FE',
+  ovmWhitelistOwner: '0x536059788FeD3A9874fD224Ba137d280Bb3f17FE',
 }
 
 export default config
