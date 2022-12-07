@@ -15,6 +15,7 @@ const config = {
   ovmAddressManagerOwner: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
   ovmGasPriceOracleOwner: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
   ovmWhitelistOwner: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
+  gcdAddress: '0x1ef834d6d3694a932a2082678edd543e3eb3412b',
 }
 
 export default config
