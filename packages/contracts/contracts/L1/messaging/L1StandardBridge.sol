@@ -28,11 +28,10 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
      ********************************/
 
     address public l2TokenBridge;
+    address public gcd;
 
     // Maps L1 token to L2 token to balance of the L1 token deposited
     mapping(address => mapping(address => uint256)) public deposits;
-
-    address public gcd;
 
     /***************
      * Constructor *
