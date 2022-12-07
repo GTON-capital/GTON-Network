@@ -94,6 +94,40 @@ function finalOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined
 
+### gcdSlotKey
+
+```solidity
+function gcdSlotKey() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
+### gcdSlotVal
+
+```solidity
+function gcdSlotVal() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined
+
 ### isUpgrading
 
 ```solidity
