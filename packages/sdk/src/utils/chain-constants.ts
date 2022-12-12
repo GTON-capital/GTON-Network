@@ -163,6 +163,10 @@ export const CONTRACT_ADDRESSES: {
     },
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
+  [L2ChainID.BSC_TESTNET]: {
+    l1: getL1ContractsByNetworkName('bscTestnet'),
+    l2: DEFAULT_L2_CONTRACT_ADDRESSES,
+  },
 }
 
 /**
