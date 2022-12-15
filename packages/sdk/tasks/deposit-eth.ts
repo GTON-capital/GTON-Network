@@ -165,7 +165,7 @@ task('deposit-eth', 'Deposits WETH9 onto L2.')
 
     // Deposit ETH
     console.log('Depositing ETH through StandardBridge')
-    const ethDeposit = await messenger.depositETH(amount, { recipient: to })
+    const ethDeposit = await messenger.depositGCD(amount, { recipient: to })
     const depositMessageReceipt = await messenger.waitForMessageReceipt(
       ethDeposit
     )
