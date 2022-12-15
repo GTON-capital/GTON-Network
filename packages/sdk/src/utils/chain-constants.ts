@@ -24,7 +24,7 @@ export const DEPOSIT_CONFIRMATION_BLOCKS: {
   [L2ChainID.OPTIMISM_HARDHAT_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_LOCAL_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_ALPHA_TESTNET]: 12 as const,
-  [L2ChainID.GTON_TESTNET]: 50022 as const,
+  [L2ChainID.GTON_TESTNET]: 12 as const,
 }
 
 export const CHAIN_BLOCK_TIMES: {
@@ -165,7 +165,19 @@ export const CONTRACT_ADDRESSES: {
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
   [L2ChainID.GTON_TESTNET]: {
-    l1: getL1ContractsByNetworkName('bscTestnet'),
+    l1: {
+      AddressManager: '0x5251fDd1D42f70b9f46d00f85EC0A481D3e15FA2' as const,
+      L1CrossDomainMessenger:
+        '0xAd77A8e09084536672c83A439Ee618681a6E16b4' as const,
+      L1StandardBridge: '0x3636543F110a23381047281146B18215F332Fea7' as const,
+      StateCommitmentChain:
+        '0xf566C28E2Ce1dcC27Fc6E6CE8fAE5A604276d04d' as const,
+      CanonicalTransactionChain:
+        '0xcEDc2a108C9BB22dAd29C51D2a445f59840E185f' as const,
+      BondManager: '0x165CF9CB3dE3EF93b14b50448be444a3781489d9' as const,
+      OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
+      L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
+    },
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
 }
