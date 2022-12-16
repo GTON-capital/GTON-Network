@@ -31,22 +31,6 @@
           "devdoc",
           "userdoc",
           "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
-          "userdoc",
-          "devdoc",
           "userdoc"
         ],
         "": [
@@ -56,7 +40,6 @@
     },
     "metadata": {
       "useLiteralContent": true
-    },
-    "libraries": {}
+    }
   }
 }
