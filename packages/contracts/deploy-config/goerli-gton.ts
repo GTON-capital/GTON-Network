@@ -6,7 +6,7 @@ const config = {
   l2ChainId: 50022,
   ctcL2GasDiscountDivisor: 32,
   ctcEnqueueGasCost: 60_000,
-  sccFaultProofWindowSeconds: 604800,
+  sccFaultProofWindowSeconds: 60,
   sccSequencerPublishWindowSeconds: 12592000,
   ovmSequencerAddress: '0x7b1d60E68DF7d2821180c85A9B87DAE5b692Ea47',
   ovmProposerAddress: '0x0e0a2852ba4f88DD516D78348Ac41f33E6BD5F7E',
