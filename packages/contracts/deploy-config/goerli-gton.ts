@@ -11,10 +11,10 @@ const config = {
   ovmSequencerAddress: '0x7b1d60E68DF7d2821180c85A9B87DAE5b692Ea47',
   ovmProposerAddress: '0x0e0a2852ba4f88DD516D78348Ac41f33E6BD5F7E',
   ovmBlockSignerAddress: '0x00000398232E2064F896018496b4b44b3D62751F',
-  ovmFeeWalletAddress: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
-  ovmAddressManagerOwner: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
-  ovmGasPriceOracleOwner: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
-  ovmWhitelistOwner: '0xC313d236Bf92265D3081cFBe528305794caE0DeA',
+  ovmFeeWalletAddress: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
+  ovmAddressManagerOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
+  ovmGasPriceOracleOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
+  ovmWhitelistOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
   gcdAddress: '0x1ef834d6d3694a932a2082678edd543e3eb3412b',
 }
 
