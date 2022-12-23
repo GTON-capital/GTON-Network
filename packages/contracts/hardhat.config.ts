@@ -58,6 +58,12 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
+    'goerli-telegin': {
+      chainId: 5,
+      url: process.env.CONTRACTS_RPC_URL || '',
+      deploy,
+      accounts: [privateKey],
+    },
     'goerli-gton': {
       chainId: 5,
       url: process.env.CONTRACTS_RPC_URL || '',

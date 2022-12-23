@@ -68,6 +68,7 @@ services:
     environment:
       <<: *system-addr-env
       ETH1_HTTP: ${L1_RPC_ENDPOINT}
+      # 5m in replica
       ROLLUP_TIMESTAMP_REFRESH: 5s
       ROLLUP_STATE_DUMP_PATH: http://deployer:8081/state-dump.latest.json
       # connecting to the DTL
