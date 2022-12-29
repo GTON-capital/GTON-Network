@@ -107,6 +107,7 @@ const config: HardhatUserConfig = {
   paths: {
     deploy: './deploy',
     deployments: './deployments',
+    // @ts-ignore
     deployConfig: './deploy-config',
   },
   namedAccounts: {
@@ -244,6 +245,7 @@ if (
   process.env.CONTRACTS_DEPLOYER_KEY &&
   process.env.CONTRACTS_RPC_URL
 ) {
+  // @ts-ignore
   config.networks[process.env.CONTRACTS_TARGET_NETWORK] = {
     accounts: [process.env.CONTRACTS_DEPLOYER_KEY],
     url: process.env.CONTRACTS_RPC_URL,

@@ -68,7 +68,7 @@ actor('Depositor', () => {
     const { messenger } = ctx
     const recipient = Wallet.createRandom().connect(l2Provider)
     logger.log(`Depositing funds to ${recipient.address}.`)
-    const depositTx = await messenger.depositETH(utils.parseEther('0.000001'), {
+    const depositTx = await messenger.depositGCD(utils.parseEther('0.000001'), {
       recipient: recipient.address,
     })
     logger.log(`Awaiting receipt for deposit tx ${depositTx.hash}.`)

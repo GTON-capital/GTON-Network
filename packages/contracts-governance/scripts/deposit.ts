@@ -29,7 +29,7 @@ task('deposit', 'Deposits funds onto Optimism.')
 
     const amountWei = utils.parseEther(amountEth)
     console.log(`Depositing ${amountEth} ETH to ${to}...`)
-    const tx = await messenger.depositETH(amountWei, {
+    const tx = await messenger.depositGCD(amountWei, {
       recipient: to,
     })
     console.log(`Got TX hash ${tx.hash}. Waiting...`)

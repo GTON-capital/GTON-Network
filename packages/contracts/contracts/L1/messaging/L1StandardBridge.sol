@@ -28,6 +28,7 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
      ********************************/
 
     address public l2TokenBridge;
+    address public gcd;
 
     // Maps L1 token to L2 token to balance of the L1 token deposited
     mapping(address => mapping(address => uint256)) public deposits;
@@ -48,10 +49,15 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
      * @param _l2TokenBridge L2 standard bridge address.
      */
     // slither-disable-next-line external-function
-    function initialize(address _l1messenger, address _l2TokenBridge) public {
+    function initialize(
+        address _l1messenger,
+        address _l2TokenBridge,
+        address _gcd
+    ) public {
         require(messenger == address(0), "Contract has already been initialized.");
         messenger = _l1messenger;
         l2TokenBridge = _l2TokenBridge;
+        gcd = _gcd;
     }
 
     /**************
@@ -73,26 +79,29 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
      * Since the receive function doesn't take data, a conservative
      * default amount is forwarded to L2.
      */
-    receive() external payable onlyEOA {
-        _initiateETHDeposit(msg.sender, msg.sender, 200_000, bytes(""));
-    }
+    receive() external payable onlyEOA {}
 
     /**
      * @inheritdoc IL1StandardBridge
      */
-    function depositETH(uint32 _l2Gas, bytes calldata _data) external payable onlyEOA {
-        _initiateETHDeposit(msg.sender, msg.sender, _l2Gas, _data);
-    }
-
-    /**
-     * @inheritdoc IL1StandardBridge
-     */
-    function depositETHTo(
-        address _to,
+    function depositGCD(
+        uint256 _amount,
         uint32 _l2Gas,
         bytes calldata _data
-    ) external payable {
-        _initiateETHDeposit(msg.sender, _to, _l2Gas, _data);
+    ) external virtual onlyEOA {
+        _initiateGCDDeposit(msg.sender, msg.sender, _amount, _l2Gas, _data);
+    }
+
+    /**
+     * @inheritdoc IL1StandardBridge
+     */
+    function depositGCDTo(
+        address _to,
+        uint256 _amount,
+        uint32 _l2Gas,
+        bytes calldata _data
+    ) external virtual {
+        _initiateGCDDeposit(msg.sender, _to, _amount, _l2Gas, _data);
     }
 
     /**
@@ -105,12 +114,19 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
      *        solely as a convenience for external contracts. Aside from enforcing a maximum
      *        length, these contracts provide no guarantees about its content.
      */
-    function _initiateETHDeposit(
+    function _initiateGCDDeposit(
         address _from,
         address _to,
+        uint256 _amount,
         uint32 _l2Gas,
         bytes memory _data
     ) internal {
+        // When a deposit is initiated on L1, the L1 Bridge transfers the funds to itself for future
+        // withdrawals. The use of safeTransferFrom enables support of "broken tokens" which do not
+        // return a boolean value.
+        // slither-disable-next-line reentrancy-events, reentrancy-benign
+        IERC20(gcd).safeTransferFrom(_from, address(this), _amount);
+
         // Construct calldata for finalizeDeposit call
         bytes memory message = abi.encodeWithSelector(
             IL2ERC20Bridge.finalizeDeposit.selector,
@@ -118,13 +134,18 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
             Lib_PredeployAddresses.OVM_ETH,
             _from,
             _to,
-            msg.value,
+            _amount,
             _data
         );
 
         // Send calldata into L2
         // slither-disable-next-line reentrancy-events
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
+
+        // slither-disable-next-line reentrancy-benign
+        deposits[gcd][Lib_PredeployAddresses.OVM_ETH] =
+            deposits[gcd][Lib_PredeployAddresses.OVM_ETH] +
+            _amount;
 
         // slither-disable-next-line reentrancy-events
         emit ETHDepositInitiated(_from, _to, msg.value, _data);
@@ -221,9 +242,13 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
         uint256 _amount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
+        deposits[gcd][Lib_PredeployAddresses.OVM_ETH] =
+            deposits[gcd][Lib_PredeployAddresses.OVM_ETH] -
+            _amount;
+
+        // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
         // slither-disable-next-line reentrancy-events
-        (bool success, ) = _to.call{ value: _amount }(new bytes(0));
-        require(success, "TransferHelper::safeTransferETH: ETH transfer failed");
+        IERC20(gcd).safeTransfer(_to, _amount);
 
         // slither-disable-next-line reentrancy-events
         emit ETHWithdrawalFinalized(_from, _to, _amount, _data);

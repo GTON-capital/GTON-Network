@@ -1,6 +1,7 @@
 /* Imports: External */
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 import { hexStringEquals, awaitCondition } from '@eth-optimism/core-utils'
+import { ethers } from 'ethers'
 
 /* Imports: Internal */
 import { getContractFromArtifact } from '../src/deploy-utils'
@@ -27,8 +28,17 @@ const deployFn: DeployFunction = async (hre) => {
     names.unmanaged.Lib_AddressManager
   )
 
-  console.log(`Initializing Proxy__OVM_L1CrossDomainMessenger...`)
-  await Proxy__OVM_L1CrossDomainMessenger.initialize(Lib_AddressManager.address)
+  if (
+    hexStringEquals(
+      await Proxy__OVM_L1CrossDomainMessenger.libAddressManager(),
+      ethers.constants.AddressZero
+    )
+  ) {
+    console.log(`Initializing Proxy__OVM_L1CrossDomainMessenger...`)
+    await Proxy__OVM_L1CrossDomainMessenger.initialize(
+      Lib_AddressManager.address
+    )
+  }
 
   console.log(`Checking that contract was correctly initialized...`)
   await awaitCondition(
