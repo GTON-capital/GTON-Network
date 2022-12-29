@@ -24,7 +24,7 @@ export const DEPOSIT_CONFIRMATION_BLOCKS: {
   [L2ChainID.OPTIMISM_HARDHAT_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_LOCAL_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_ALPHA_TESTNET]: 12 as const,
-  [L2ChainID.GTON_TESTNET]: 12 as const,
+  [L2ChainID.BSC_TESTNET]: 12 as const,
 }
 
 export const CHAIN_BLOCK_TIMES: {
@@ -164,7 +164,7 @@ export const CONTRACT_ADDRESSES: {
     },
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
-  [L2ChainID.GTON_TESTNET]: {
+  [L2ChainID.BSC_TESTNET]: {
     l1: getL1ContractsByNetworkName('bscTestnet'),
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
