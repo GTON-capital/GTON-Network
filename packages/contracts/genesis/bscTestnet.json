@@ -1,5 +1,5 @@
 {
-    "commit": "fbc3f8eb9cf1cb92817e581c3b53da3feaa674d9",
+    "commit": "612d3158cf39be3b6169d2c9c1fb89e7fb7b6f6f",
     "config": {
         "chainId": 50021,
         "homesteadBlock": 0,
@@ -11,7 +11,7 @@
         "petersburgBlock": 0,
         "istanbulBlock": 0,
         "muirGlacierBlock": 0,
-        "berlinBlock": 0,
+        "berlinBlock": 152300,
         "clique": {
             "period": 0,
             "epoch": 30000
