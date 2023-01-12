@@ -1,6 +1,6 @@
 {
-  "name": "@eth-optimism/ci-builder",
-  "version": "0.3.8",
+  "name": "@eth-optimism/foundry",
+  "version": "0.1.3",
   "scripts": {},
   "license": "MIT",
   "dependencies": {}

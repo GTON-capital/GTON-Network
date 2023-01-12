@@ -26,8 +26,6 @@ RUN source $HOME/.profile && \
 
 FROM ethereum/client-go:alltools-v1.10.25 as geth
 
-FROM ghcr.io/crytic/echidna/echidna:v2.0.4 as echidna-test
-
 FROM python:3.8.13-slim-bullseye
 
 ENV GOPATH=/go
@@ -38,7 +36,6 @@ COPY --from=foundry-build /opt/foundry/target/release/forge /usr/local/bin/forge
 COPY --from=foundry-build /opt/foundry/target/release/cast /usr/local/bin/cast
 COPY --from=foundry-build /opt/foundry/target/release/anvil /usr/local/bin/anvil
 COPY --from=geth /usr/local/bin/abigen /usr/local/bin/abigen
-COPY --from=echidna-test /usr/local/bin/echidna-test /usr/local/bin/echidna-test
 COPY check-changed.sh /usr/local/bin/check-changed
 
 RUN apt-get update && \
@@ -51,7 +48,7 @@ RUN apt-get update && \
   apt-get install -y nodejs && \
   npm i -g yarn && \
   npm i -g depcheck && \
-  pip install slither-analyzer==0.9.1 && \
+  pip install slither-analyzer==0.9.0 && \
   go install gotest.tools/gotestsum@latest && \
   curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.48.0 && \
   curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | bash && \
