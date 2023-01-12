@@ -79,13 +79,23 @@ describe('[GAS BENCHMARK] Depositing via the standard bridge [ @skip-on-coverage
     await L1CrossDomainMessenger.initialize(AddressManager.address)
   })
 
+  let GCD: MockContract<Contract>
   let L1ERC20: MockContract<Contract>
   let L1StandardBridge: Contract
   before('Deploy the bridge and setup the token', async () => {
+    GCD = await (
+      await smock.mock('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20')
+    ).deploy('GCD', 'GCD')
+    await GCD.setVariable('_totalSupply', INITIAL_TOTAL_L1_SUPPLY)
+    await GCD.setVariable('_balances', {
+      [alice.address]: INITIAL_TOTAL_L1_SUPPLY,
+    })
+
     L1StandardBridge = await deploy('L1StandardBridge')
     await L1StandardBridge.initialize(
       L1CrossDomainMessenger.address,
-      NON_ZERO_ADDRESS
+      NON_ZERO_ADDRESS,
+      GCD.address
     )
 
     L1ERC20 = await (await smock.mock('ERC20')).deploy('L1ERC20', 'ERC')
@@ -107,21 +117,23 @@ describe('[GAS BENCHMARK] Depositing via the standard bridge [ @skip-on-coverage
       )
     })
 
+    beforeEach(async () => {
+      await GCD.connect(alice).approve(L1StandardBridge.address, depositAmount)
+    })
+
     it('cost to deposit ETH', async () => {
       // Alice calls deposit on the bridge and the L1 bridge calls transferFrom on the token.
-      const res = await L1StandardBridge.connect(alice).depositETH(
+      const res = await L1StandardBridge.connect(alice).depositGCD(
+        depositAmount,
         FINALIZATION_GAS,
-        NON_NULL_BYTES32,
-        {
-          value: depositAmount,
-        }
+        NON_NULL_BYTES32
       )
 
       const receipt = await res.wait()
       const gasUsed = receipt.gasUsed.toNumber()
       console.log('    - Gas used:', gasUsed)
 
-      expectApprox(gasUsed, 132_481, {
+      expectApprox(gasUsed, 194_055, {
         absoluteUpperDeviation: 500,
         // Assert a lower bound of 1% reduction on gas cost. If your tests are breaking because your
         // contracts are too efficient, consider updating the target value!

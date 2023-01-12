@@ -23,6 +23,8 @@ contract ChugSplashDictator is iL1ChugSplashDeployer {
     bytes32 public messengerSlotVal;
     bytes32 public bridgeSlotKey;
     bytes32 public bridgeSlotVal;
+    bytes32 public gcdSlotKey;
+    bytes32 public gcdSlotVal;
 
     /***************
      * Constructor *
@@ -35,7 +37,9 @@ contract ChugSplashDictator is iL1ChugSplashDeployer {
         bytes32 _messengerSlotKey,
         bytes32 _messengerSlotVal,
         bytes32 _bridgeSlotKey,
-        bytes32 _bridgeSlotVal
+        bytes32 _bridgeSlotVal,
+        bytes32 _gcdSlotKey,
+        bytes32 _gcdSlotVal
     ) {
         target = _target;
         finalOwner = _finalOwner;
@@ -44,6 +48,8 @@ contract ChugSplashDictator is iL1ChugSplashDeployer {
         messengerSlotVal = _messengerSlotVal;
         bridgeSlotKey = _bridgeSlotKey;
         bridgeSlotVal = _bridgeSlotVal;
+        gcdSlotKey = _gcdSlotKey;
+        gcdSlotVal = _gcdSlotVal;
     }
 
     /********************
@@ -56,6 +62,7 @@ contract ChugSplashDictator is iL1ChugSplashDeployer {
         target.setCode(_code);
         target.setStorage(messengerSlotKey, messengerSlotVal);
         target.setStorage(bridgeSlotKey, bridgeSlotVal);
+        target.setStorage(gcdSlotKey, gcdSlotVal);
         target.setOwner(finalOwner);
     }
 

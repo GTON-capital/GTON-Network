@@ -51,10 +51,10 @@ function depositERC20To(address _l1Token, address _l2Token, address _to, uint256
 | _l2Gas | uint32 | Gas limit required to complete the deposit on L2.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
-### depositETH
+### depositGCD
 
 ```solidity
-function depositETH(uint32 _l2Gas, bytes _data) external payable
+function depositGCD(uint256 _amount, uint32 _l2Gas, bytes _data) external nonpayable
 ```
 
 
@@ -65,13 +65,14 @@ function depositETH(uint32 _l2Gas, bytes _data) external payable
 
 | Name | Type | Description |
 |---|---|---|
+| _amount | uint256 | Amount of the GCD to deposit.
 | _l2Gas | uint32 | Gas limit required to complete the deposit on L2.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
-### depositETHTo
+### depositGCDTo
 
 ```solidity
-function depositETHTo(address _to, uint32 _l2Gas, bytes _data) external payable
+function depositGCDTo(address _to, uint256 _amount, uint32 _l2Gas, bytes _data) external nonpayable
 ```
 
 
@@ -83,6 +84,7 @@ function depositETHTo(address _to, uint32 _l2Gas, bytes _data) external payable
 | Name | Type | Description |
 |---|---|---|
 | _to | address | L2 address to credit the withdrawal to.
+| _amount | uint256 | Amount of the GCD to deposit.
 | _l2Gas | uint32 | Gas limit required to complete the deposit on L2.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
