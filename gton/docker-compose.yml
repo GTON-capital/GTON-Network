@@ -22,6 +22,7 @@ services:
       CONTRACTS_RPC_URL: ${L1_RPC_ENDPOINT}
       CONTRACTS_DEPLOYER_KEY: ${CONTRACTS_DEPLOYER_KEY}
       CONTRACTS_TARGET_NETWORK: ${CONTRACTS_TARGET_NETWORK}
+      DEPLOYER_BERLIN_BLOCK: ${DEPLOYER_BERLIN_BLOCK}
     ports:
       # expose the service to the host for getting the contract addrs
       - ${DEPLOYER_PORT:-8080}:8081
