@@ -16,6 +16,7 @@ const config = {
   ovmGasPriceOracleOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
   ovmWhitelistOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
   gcdAddress: '0x1ef834d6d3694a932a2082678edd543e3eb3412b',
+  hfBerlinBlock: +process.env.DEPLOYER_BERLIN_BLOCK || 0,
 }
 
 export default config
