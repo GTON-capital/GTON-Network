@@ -31,6 +31,11 @@ const config: HardhatUserConfig = {
       saveDeployments: false,
       tags: ['local'],
     },
+    'goerli-gton': {
+      url: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      chainId: 5,
+      accounts: [privateKey],
+    },
     optimism: {
       url: 'http://127.0.0.1:8545',
       saveDeployments: false,
