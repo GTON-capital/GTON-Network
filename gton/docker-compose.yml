@@ -22,6 +22,7 @@ services:
       CONTRACTS_RPC_URL: ${L1_RPC_ENDPOINT}
       CONTRACTS_DEPLOYER_KEY: ${CONTRACTS_DEPLOYER_KEY}
       CONTRACTS_TARGET_NETWORK: ${CONTRACTS_TARGET_NETWORK}
+      DEPLOYER_BERLIN_BLOCK: ${DEPLOYER_BERLIN_BLOCK}
     ports:
       # expose the service to the host for getting the contract addrs
       - ${DEPLOYER_PORT:-8080}:8081
@@ -52,7 +53,7 @@ services:
     ports:
       - ${DTL_PORT:-7878}:7878
     volumes:
-      - "./data/dtl:/db/"
+      - './data/dtl:/db/'
 
   l2geth:
     depends_on:
@@ -85,7 +86,7 @@ services:
       - ${L2GETH_HTTP_PORT:-8545}:8545
       - ${L2GETH_WS_PORT:-8546}:8546
     volumes:
-      - "./data/geth:/root/.ethereum"
+      - './data/geth:/root/.ethereum'
 
   relayer:
     depends_on:
@@ -101,7 +102,7 @@ services:
     environment:
       MESSAGE_RELAYER__L1_RPC_PROVIDER: ${L1_RPC_ENDPOINT}
       MESSAGE_RELAYER__L2_RPC_PROVIDER: http://l2geth:8545
-      MESSAGE_RELAYER__L1_WALLET: '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97'
+      MESSAGE_RELAYER__L1_WALLET: ${MESSAGE_RELAYER__L1_WALLET}
       RETRIES: 60
 
   fault_detector:

@@ -181,7 +181,7 @@ export const fundUser = async (
   recipient?: string
 ) => {
   await messenger.waitForMessageReceipt(
-    await messenger.depositETH(amount, {
+    await messenger.depositGCD(amount, {
       l2GasLimit: DEFAULT_TEST_GAS_L2,
       overrides: {
         gasPrice: DEFAULT_TEST_GAS_L1,
