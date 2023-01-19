@@ -83,9 +83,9 @@ task('take-dump').setAction(async ({}, hre) => {
       // Set the messageNonce to a high value to avoid overwriting old sent messages.
       messageNonce: 100000,
     },
-    WETH9: {
-      name: 'Wrapped Ether',
-      symbol: 'WETH',
+    WGCD: {
+      name: 'Wrapped GCD',
+      symbol: 'WGCD',
       decimals: 18,
     },
   }

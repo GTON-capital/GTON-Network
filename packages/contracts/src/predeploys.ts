@@ -21,8 +21,8 @@ export const predeploys = {
   // ERC20 is desirable.
   OVM_ETH: '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000',
 
-  // We're also putting WETH9 at the old OVM_ETH address.
-  WETH9: '0x4200000000000000000000000000000000000006',
+  // We're also putting WGCD at the old OVM_ETH address.
+  WGCD: '0x4200000000000000000000000000000000000006',
 }
 
 export const futurePredeploys = {

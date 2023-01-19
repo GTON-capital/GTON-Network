@@ -63,7 +63,7 @@ export interface OEL2Contracts {
   OVM_ETH: Contract
   OVM_GasPriceOracle: Contract
   OVM_SequencerFeeVault: Contract
-  WETH: Contract
+  WGCD: Contract
   BedrockMessagePasser: Contract
 }
 
