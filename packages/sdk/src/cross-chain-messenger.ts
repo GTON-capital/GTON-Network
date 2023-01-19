@@ -485,7 +485,7 @@ export class CrossChainMessenger {
 
       // The `messages` object corresponds to a list of SentMessage events that were triggered by
       // the same transaction. We want to find the specific SentMessage event that corresponds to
-      // the TokenBridgeMessage (either a ETHDepositInitiated, ERC20DepositInitiated, or
+      // the TokenBridgeMessage (either a GCDDepositInitiated, ERC20DepositInitiated, or
       // WithdrawalInitiated event). We expect the behavior of bridge contracts to be that these
       // TokenBridgeMessage events are triggered and then a SentMessage event is triggered. Our
       // goal here is therefore to find the first SentMessage event that comes after the input

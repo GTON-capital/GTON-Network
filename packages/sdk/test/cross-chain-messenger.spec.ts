@@ -1568,7 +1568,7 @@ describe('CrossChainMessenger', () => {
 
     it('should trigger the deposit ETH function with the given amount', async () => {
       await expect(messenger.depositGCD(100000))
-        .to.emit(l1Bridge, 'ETHDepositInitiated')
+        .to.emit(l1Bridge, 'GCDDepositInitiated')
         .withArgs(
           await l1Signer.getAddress(),
           await l1Signer.getAddress(),

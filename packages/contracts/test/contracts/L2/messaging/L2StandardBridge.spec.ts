@@ -209,7 +209,7 @@ describe('L2StandardBridge', () => {
       ).to.deep.equal([
         DUMMY_L1_BRIDGE_ADDRESS,
         getContractInterface('L1StandardBridge').encodeFunctionData(
-          'finalizeETHWithdrawal',
+          'finalizeGCDWithdrawal',
           [alice.address, alice.address, 0, NON_NULL_BYTES32]
         ),
         0,

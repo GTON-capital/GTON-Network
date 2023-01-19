@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 import { MockMessenger } from "./MockMessenger.sol";
 
 contract MockBridge {
-    event ETHDepositInitiated(
+    event GCDDepositInitiated(
         address indexed _from,
         address indexed _to,
         uint256 _amount,
@@ -127,7 +127,7 @@ contract MockBridge {
         public
         payable
     {
-        emit ETHDepositInitiated(
+        emit GCDDepositInitiated(
             msg.sender,
             msg.sender,
             msg.value,

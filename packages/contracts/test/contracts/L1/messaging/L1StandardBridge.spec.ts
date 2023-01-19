@@ -197,10 +197,10 @@ describe('L1StandardBridge', () => {
     })
   })
 
-  describe('ETH withdrawals', () => {
+  describe('GCD withdrawals', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L1 account', async () => {
       await expect(
-        L1StandardBridge.connect(alice).finalizeETHWithdrawal(
+        L1StandardBridge.connect(alice).finalizeGCDWithdrawal(
           constants.AddressZero,
           constants.AddressZero,
           1,
@@ -215,7 +215,7 @@ describe('L1StandardBridge', () => {
       )
 
       await expect(
-        L1StandardBridge.finalizeETHWithdrawal(
+        L1StandardBridge.finalizeGCDWithdrawal(
           constants.AddressZero,
           constants.AddressZero,
           1,
@@ -235,7 +235,7 @@ describe('L1StandardBridge', () => {
       )
 
       await expect(
-        L1StandardBridge.finalizeETHWithdrawal(
+        L1StandardBridge.finalizeGCDWithdrawal(
           NON_ZERO_ADDRESS,
           NON_ZERO_ADDRESS,
           100,
@@ -266,7 +266,7 @@ describe('L1StandardBridge', () => {
         NON_NULL_BYTES32
       )
 
-      await L1StandardBridge.finalizeETHWithdrawal(
+      await L1StandardBridge.finalizeGCDWithdrawal(
         NON_ZERO_ADDRESS,
         NON_ZERO_ADDRESS,
         withdrawalAmount,
@@ -534,14 +534,14 @@ describe('L1StandardBridge', () => {
     })
   })
 
-  describe('donateETH', () => {
+  describe('donateNative', () => {
     it('it should just call the function', async () => {
-      await expect(L1StandardBridge.donateETH()).to.not.be.reverted
+      await expect(L1StandardBridge.donateNative()).to.not.be.reverted
     })
 
-    it('should send ETH to the contract account', async () => {
+    it('should send native token to the contract account', async () => {
       await expect(
-        L1StandardBridge.donateETH({
+        L1StandardBridge.donateNative({
           value: 100,
         })
       ).to.not.be.reverted

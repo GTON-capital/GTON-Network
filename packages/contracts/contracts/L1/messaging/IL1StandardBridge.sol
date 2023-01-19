@@ -10,14 +10,14 @@ interface IL1StandardBridge is IL1ERC20Bridge {
     /**********
      * Events *
      **********/
-    event ETHDepositInitiated(
+    event GCDDepositInitiated(
         address indexed _from,
         address indexed _to,
         uint256 _amount,
         bytes _data
     );
 
-    event ETHWithdrawalFinalized(
+    event GCDWithdrawalFinalized(
         address indexed _from,
         address indexed _to,
         uint256 _amount,
@@ -64,7 +64,7 @@ interface IL1StandardBridge is IL1ERC20Bridge {
 
     /**
      * @dev Complete a withdrawal from L2 to L1, and credit funds to the recipient's balance of the
-     * L1 ETH token. Since only the xDomainMessenger can call this function, it will never be called
+     * L1 GCD token. Since only the xDomainMessenger can call this function, it will never be called
      * before the withdrawal is finalized.
      * @param _from L2 address initiating the transfer.
      * @param _to L1 address to credit the withdrawal to.
@@ -73,7 +73,7 @@ interface IL1StandardBridge is IL1ERC20Bridge {
      *        solely as a convenience for external contracts. Aside from enforcing a maximum
      *        length, these contracts provide no guarantees about its content.
      */
-    function finalizeETHWithdrawal(
+    function finalizeGCDWithdrawal(
         address _from,
         address _to,
         uint256 _amount,
