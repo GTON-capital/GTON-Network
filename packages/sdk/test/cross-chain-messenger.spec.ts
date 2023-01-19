@@ -1628,7 +1628,7 @@ describe('CrossChainMessenger', () => {
         .to.emit(l2Bridge, 'WithdrawalInitiated')
         .withArgs(
           ethers.constants.AddressZero,
-          predeploys.OVM_ETH,
+          predeploys.OVM_GCD,
           await l2Signer.getAddress(),
           await l2Signer.getAddress(),
           100000,

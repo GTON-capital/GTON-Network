@@ -35,12 +35,12 @@ describe('predeploys', () => {
     })
   })
 
-  describe('OVM_ETH', () => {
+  describe('OVM_GCD', () => {
     let ovmEth: ethers.Contract
     before(() => {
       ovmEth = new ethers.Contract(
-        predeploys.OVM_ETH,
-        getContractInterface('OVM_ETH'),
+        predeploys.OVM_GCD,
+        getContractInterface('OVM_GCD'),
         env.l2Wallet
       )
     })

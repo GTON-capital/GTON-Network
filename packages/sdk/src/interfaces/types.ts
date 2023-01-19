@@ -60,7 +60,7 @@ export interface OEL2Contracts {
   OVM_L1BlockNumber: Contract
   OVM_L2ToL1MessagePasser: Contract
   OVM_DeployerWhitelist: Contract
-  OVM_ETH: Contract
+  OVM_GCD: Contract
   OVM_GasPriceOracle: Contract
   OVM_SequencerFeeVault: Contract
   WGCD: Contract

@@ -48,7 +48,7 @@ export const DEFAULT_L2_CONTRACT_ADDRESSES: OEL2ContractsLike = {
   OVM_L1BlockNumber: predeploys.OVM_L1BlockNumber,
   OVM_L2ToL1MessagePasser: predeploys.OVM_L2ToL1MessagePasser,
   OVM_DeployerWhitelist: predeploys.OVM_DeployerWhitelist,
-  OVM_ETH: predeploys.OVM_ETH,
+  OVM_GCD: predeploys.OVM_GCD,
   OVM_GasPriceOracle: predeploys.OVM_GasPriceOracle,
   OVM_SequencerFeeVault: predeploys.OVM_SequencerFeeVault,
   WGCD: predeploys.WGCD,

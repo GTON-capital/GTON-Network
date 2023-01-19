@@ -244,7 +244,7 @@ func (s *StateDB) Empty(addr common.Address) bool {
 // Retrieve the balance from the given address or 0 if object not found
 func (s *StateDB) GetBalance(addr common.Address) *big.Int {
 	if rcfg.UsingOVM {
-		// Get balance from the OVM_ETH contract.
+		// Get balance from the OVM_GCD contract.
 		// NOTE: We may remove this feature in a future release.
 		statedumper.WriteETH(addr)
 		key := GetOVMBalanceKey(addr)
@@ -376,7 +376,7 @@ func (s *StateDB) HasSuicided(addr common.Address) bool {
 // AddBalance adds amount to the account associated with addr.
 func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 	if rcfg.UsingOVM {
-		// Mutate the storage slot inside of OVM_ETH to change balances.
+		// Mutate the storage slot inside of OVM_GCD to change balances.
 		// Note that we don't need to check for overflows or underflows here because the code that
 		// uses this codepath already checks for them. You can follow the original codepath below
 		// (stateObject.AddBalance) to confirm that there are no checks being performed here.
@@ -397,7 +397,7 @@ func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 // SubBalance subtracts amount from the account associated with addr.
 func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 	if rcfg.UsingOVM {
-		// Mutate the storage slot inside of OVM_ETH to change balances.
+		// Mutate the storage slot inside of OVM_GCD to change balances.
 		// Note that we don't need to check for overflows or underflows here because the code that
 		// uses this codepath already checks for them. You can follow the original codepath below
 		// (stateObject.SubBalance) to confirm that there are no checks being performed here.
@@ -417,7 +417,7 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	if rcfg.UsingOVM {
-		// Mutate the storage slot inside of OVM_ETH to change balances.
+		// Mutate the storage slot inside of OVM_GCD to change balances.
 		statedumper.WriteETH(addr)
 		key := GetOVMBalanceKey(addr)
 		s.SetState(dump.OvmEthAddress, key, common.BigToHash(amount))

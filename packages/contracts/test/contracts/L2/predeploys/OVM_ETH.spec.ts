@@ -6,30 +6,30 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from '../../../setup'
 import { deploy } from '../../../helpers'
 
-describe('OVM_ETH', () => {
+describe('OVM_GCD', () => {
   let signer1: SignerWithAddress
   let signer2: SignerWithAddress
   before(async () => {
     ;[signer1, signer2] = await ethers.getSigners()
   })
 
-  let OVM_ETH: Contract
+  let OVM_GCD: Contract
   beforeEach(async () => {
-    OVM_ETH = await deploy('OVM_ETH')
+    OVM_GCD = await deploy('OVM_GCD')
   })
 
   describe('transfer', () => {
     it('should revert', async () => {
-      await expect(OVM_ETH.transfer(signer2.address, 100)).to.be.revertedWith(
-        'OVM_ETH: transfer is disabled pending further community discussion.'
+      await expect(OVM_GCD.transfer(signer2.address, 100)).to.be.revertedWith(
+        'OVM_GCD: transfer is disabled pending further community discussion.'
       )
     })
   })
 
   describe('approve', () => {
     it('should revert', async () => {
-      await expect(OVM_ETH.approve(signer2.address, 100)).to.be.revertedWith(
-        'OVM_ETH: approve is disabled pending further community discussion.'
+      await expect(OVM_GCD.approve(signer2.address, 100)).to.be.revertedWith(
+        'OVM_GCD: approve is disabled pending further community discussion.'
       )
     })
   })
@@ -37,9 +37,9 @@ describe('OVM_ETH', () => {
   describe('transferFrom', () => {
     it('should revert', async () => {
       await expect(
-        OVM_ETH.transferFrom(signer1.address, signer2.address, 100)
+        OVM_GCD.transferFrom(signer1.address, signer2.address, 100)
       ).to.be.revertedWith(
-        'OVM_ETH: transferFrom is disabled pending further community discussion.'
+        'OVM_GCD: transferFrom is disabled pending further community discussion.'
       )
     })
   })
@@ -47,9 +47,9 @@ describe('OVM_ETH', () => {
   describe('increaseAllowance', () => {
     it('should revert', async () => {
       await expect(
-        OVM_ETH.increaseAllowance(signer2.address, 100)
+        OVM_GCD.increaseAllowance(signer2.address, 100)
       ).to.be.revertedWith(
-        'OVM_ETH: increaseAllowance is disabled pending further community discussion.'
+        'OVM_GCD: increaseAllowance is disabled pending further community discussion.'
       )
     })
   })
@@ -57,9 +57,9 @@ describe('OVM_ETH', () => {
   describe('decreaseAllowance', () => {
     it('should revert', async () => {
       await expect(
-        OVM_ETH.decreaseAllowance(signer2.address, 100)
+        OVM_GCD.decreaseAllowance(signer2.address, 100)
       ).to.be.revertedWith(
-        'OVM_ETH: decreaseAllowance is disabled pending further community discussion.'
+        'OVM_GCD: decreaseAllowance is disabled pending further community discussion.'
       )
     })
   })

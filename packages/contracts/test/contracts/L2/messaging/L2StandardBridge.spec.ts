@@ -170,10 +170,10 @@ describe('L2StandardBridge', () => {
   describe('withdrawals', () => {
     const withdrawAmount = 1_000
 
-    let Fake__OVM_ETH: FakeContract<Contract>
+    let Fake__OVM_GCD: FakeContract<Contract>
     before(async () => {
-      Fake__OVM_ETH = await smock.fake('OVM_ETH', {
-        address: predeploys.OVM_ETH,
+      Fake__OVM_GCD = await smock.fake('OVM_GCD', {
+        address: predeploys.OVM_GCD,
       })
     })
 
@@ -196,9 +196,9 @@ describe('L2StandardBridge', () => {
       await Mock__L2Token.setVariable('l2Bridge', L2StandardBridge.address)
     })
 
-    it('withdraw() withdraws and sends the correct withdrawal message for OVM_ETH', async () => {
+    it('withdraw() withdraws and sends the correct withdrawal message for OVM_GCD', async () => {
       await L2StandardBridge.withdraw(
-        Fake__OVM_ETH.address,
+        Fake__OVM_GCD.address,
         0,
         0,
         NON_NULL_BYTES32

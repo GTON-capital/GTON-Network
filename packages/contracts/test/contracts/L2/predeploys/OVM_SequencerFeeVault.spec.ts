@@ -44,7 +44,7 @@ describe('OVM_SequencerFeeVault', () => {
 
       expect(
         Fake__L2StandardBridge.withdrawTo.getCall(0).args[0]
-      ).to.deep.equal(predeploys.OVM_ETH)
+      ).to.deep.equal(predeploys.OVM_GCD)
       expect(
         Fake__L2StandardBridge.withdrawTo.getCall(0).args[1]
       ).to.deep.equal(await signer1.getAddress())
@@ -72,7 +72,7 @@ describe('OVM_SequencerFeeVault', () => {
       await expect(OVM_SequencerFeeVault.withdraw()).to.not.be.reverted
       expect(
         Fake__L2StandardBridge.withdrawTo.getCall(1).args[0]
-      ).to.deep.equal(predeploys.OVM_ETH)
+      ).to.deep.equal(predeploys.OVM_GCD)
       expect(
         Fake__L2StandardBridge.withdrawTo.getCall(1).args[1]
       ).to.deep.equal(await signer1.getAddress())

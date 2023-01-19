@@ -131,7 +131,7 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
         bytes memory message = abi.encodeWithSelector(
             IL2ERC20Bridge.finalizeDeposit.selector,
             address(0),
-            Lib_PredeployAddresses.OVM_ETH,
+            Lib_PredeployAddresses.OVM_GCD,
             _from,
             _to,
             _amount,
@@ -143,8 +143,8 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
         sendCrossDomainMessage(l2TokenBridge, _l2Gas, message);
 
         // slither-disable-next-line reentrancy-benign
-        deposits[gcd][Lib_PredeployAddresses.OVM_ETH] =
-            deposits[gcd][Lib_PredeployAddresses.OVM_ETH] +
+        deposits[gcd][Lib_PredeployAddresses.OVM_GCD] =
+            deposits[gcd][Lib_PredeployAddresses.OVM_GCD] +
             _amount;
 
         // slither-disable-next-line reentrancy-events
@@ -242,8 +242,8 @@ contract L1StandardBridge is IL1StandardBridge, CrossDomainEnabled {
         uint256 _amount,
         bytes calldata _data
     ) external onlyFromCrossDomainAccount(l2TokenBridge) {
-        deposits[gcd][Lib_PredeployAddresses.OVM_ETH] =
-            deposits[gcd][Lib_PredeployAddresses.OVM_ETH] -
+        deposits[gcd][Lib_PredeployAddresses.OVM_GCD] =
+            deposits[gcd][Lib_PredeployAddresses.OVM_GCD] -
             _amount;
 
         // When a withdrawal is finalized on L1, the L1 Bridge transfers the funds to the withdrawer
