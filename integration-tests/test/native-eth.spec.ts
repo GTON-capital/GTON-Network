@@ -89,11 +89,11 @@ describe('Native ETH Integration Tests', async () => {
     )
   })
 
-  it('depositETH', async () => {
+  it('depositGCD', async () => {
     const depositAmount = 10
     const preBalances = await getBalances(env)
     const { tx, receipt } = await env.waitForXDomainTransaction(
-      env.messenger.contracts.l1.L1StandardBridge.depositETH(
+      env.messenger.contracts.l1.L1StandardBridge.depositGCD(
         DEFAULT_TEST_GAS_L2,
         '0xFFFF',
         {
@@ -117,11 +117,11 @@ describe('Native ETH Integration Tests', async () => {
     )
   })
 
-  it('depositETHTo', async () => {
+  it('depositGCDTo', async () => {
     const depositAmount = 10
     const preBalances = await getBalances(env)
     const depositReceipts = await env.waitForXDomainTransaction(
-      env.messenger.contracts.l1.L1StandardBridge.depositETHTo(
+      env.messenger.contracts.l1.L1StandardBridge.depositGCDTo(
         l2Bob.address,
         DEFAULT_TEST_GAS_L2,
         '0xFFFF',
@@ -156,7 +156,7 @@ describe('Native ETH Integration Tests', async () => {
     // to allow for encoding and other arguments
     const data = `0x` + 'ab'.repeat(MAX_ROLLUP_TX_SIZE - 500)
     const { tx, receipt } = await env.waitForXDomainTransaction(
-      env.messenger.contracts.l1.L1StandardBridge.depositETH(
+      env.messenger.contracts.l1.L1StandardBridge.depositGCD(
         ASSUMED_L2_GAS_LIMIT,
         data,
         {
@@ -179,12 +179,12 @@ describe('Native ETH Integration Tests', async () => {
     )
   })
 
-  it('depositETH fails with a TOO large data argument', async () => {
+  it('depositGCD fails with a TOO large data argument', async () => {
     const depositAmount = 10
 
     const data = `0x` + 'ab'.repeat(MAX_ROLLUP_TX_SIZE + 1)
     await expect(
-      env.messenger.contracts.l1.L1StandardBridge.depositETH(
+      env.messenger.contracts.l1.L1StandardBridge.depositGCD(
         DEFAULT_TEST_GAS_L2,
         data,
         {
@@ -298,7 +298,7 @@ describe('Native ETH Integration Tests', async () => {
       // 1. deposit
       const amount = utils.parseEther('1')
       await env.waitForXDomainTransaction(
-        env.messenger.contracts.l1.L1StandardBridge.depositETH(
+        env.messenger.contracts.l1.L1StandardBridge.depositGCD(
           DEFAULT_TEST_GAS_L2,
           '0xFFFF',
           {
