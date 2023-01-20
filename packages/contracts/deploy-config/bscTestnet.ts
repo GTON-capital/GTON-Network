@@ -13,7 +13,7 @@ const config = {
   ovmBlockSignerAddress: '0x00000398232E2064F896018496b4b44b3D62751F',
   ovmFeeWalletAddress: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
   ovmAddressManagerOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
-  ovmGasPriceOracleOwner: '0xa62D58e9d5F684b40072Aa48B7D67c0b1616803c',
+  ovmGasPriceOracleOwner: '0x232e2dabFADD007c702C25812Eca69Faf2Ecd816',
   ovmWhitelistOwner: '0xf7a643F3Dfc4b49a06e30AfA349ae13873FF86BD',
   gcdAddress: '0x213ecAe6b3CbC0AD976f7d82626546d5b63A71cB',
   hfBerlinBlock: +process.env.DEPLOYER_BERLIN_BLOCK || 0,
