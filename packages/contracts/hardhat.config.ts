@@ -58,6 +58,12 @@ const config: HardhatUserConfig = {
       deploy,
       accounts: [privateKey],
     },
+    bsc: {
+      chainId: 56,
+      url: 'https://bsc-dataseed.binance.org',
+      deploy,
+      accounts: [privateKey],
+    },
     bscTestnet: {
       chainId: 97,
       url: process.env.CONTRACTS_RPC_URL || '',
