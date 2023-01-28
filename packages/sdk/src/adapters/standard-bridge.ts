@@ -84,7 +84,7 @@ export class StandardBridgeAdapter implements IBridgeAdapter {
         // present ETH deposits or withdrawals.
         return (
           !hexStringEquals(event.args.l1Token, ethers.constants.AddressZero) &&
-          !hexStringEquals(event.args.l2Token, predeploys.OVM_ETH)
+          !hexStringEquals(event.args.l2Token, predeploys.OVM_GCD)
         )
       })
       .map((event) => {
@@ -127,7 +127,7 @@ export class StandardBridgeAdapter implements IBridgeAdapter {
         // present ETH deposits or withdrawals.
         return (
           !hexStringEquals(event.args.l1Token, ethers.constants.AddressZero) &&
-          !hexStringEquals(event.args.l2Token, predeploys.OVM_ETH)
+          !hexStringEquals(event.args.l2Token, predeploys.OVM_GCD)
         )
       })
       .map((event) => {
@@ -163,7 +163,7 @@ export class StandardBridgeAdapter implements IBridgeAdapter {
       // Don't support ETH deposits or withdrawals via this bridge.
       if (
         hexStringEquals(toAddress(l1Token), ethers.constants.AddressZero) ||
-        hexStringEquals(toAddress(l2Token), predeploys.OVM_ETH)
+        hexStringEquals(toAddress(l2Token), predeploys.OVM_GCD)
       ) {
         return false
       }

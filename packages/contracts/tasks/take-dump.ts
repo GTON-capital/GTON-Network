@@ -64,7 +64,7 @@ task('take-dump').setAction(async ({}, hre) => {
     OVM_SequencerFeeVault: {
       l1FeeWallet: hre.deployConfig.ovmFeeWalletAddress,
     },
-    OVM_ETH: {
+    OVM_GCD: {
       l2Bridge: predeploys.L2StandardBridge,
       l1Token: ethers.constants.AddressZero,
       _name: 'Ether',
@@ -83,9 +83,9 @@ task('take-dump').setAction(async ({}, hre) => {
       // Set the messageNonce to a high value to avoid overwriting old sent messages.
       messageNonce: 100000,
     },
-    WETH9: {
-      name: 'Wrapped Ether',
-      symbol: 'WETH',
+    WGCD: {
+      name: 'Wrapped GCD',
+      symbol: 'WGCD',
       decimals: 18,
     },
   }

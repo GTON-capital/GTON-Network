@@ -17,12 +17,12 @@ export const predeploys = {
   L2StandardTokenFactory: '0x4200000000000000000000000000000000000012',
   OVM_L1BlockNumber: '0x4200000000000000000000000000000000000013',
 
-  // We're temporarily disabling OVM_ETH because the jury is still out on whether or not ETH as an
+  // We're temporarily disabling OVM_GCD because the jury is still out on whether or not ETH as an
   // ERC20 is desirable.
-  OVM_ETH: '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000',
+  OVM_GCD: '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000',
 
-  // We're also putting WETH9 at the old OVM_ETH address.
-  WETH9: '0x4200000000000000000000000000000000000006',
+  // We're also putting WGCD at the old OVM_GCD address.
+  WGCD: '0x4200000000000000000000000000000000000006',
 }
 
 export const futurePredeploys = {

@@ -28,6 +28,7 @@ describe('L1StandardBridge', () => {
     ;[l1MessengerImpersonator, alice, bob] = await ethers.getSigners()
   })
 
+  let GCD: MockContract<Contract>
   let L1ERC20: MockContract<Contract>
   let L1StandardBridge: Contract
   let Fake__L1CrossDomainMessenger: FakeContract
@@ -38,11 +39,20 @@ describe('L1StandardBridge', () => {
       { address: await l1MessengerImpersonator.getAddress() } // This allows us to use an ethers override {from: Mock__L2CrossDomainMessenger.address} to mock calls
     )
 
+    GCD = await (
+      await smock.mock('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20')
+    ).deploy('GCD', 'GCD')
+    await GCD.setVariable('_totalSupply', INITIAL_TOTAL_L1_SUPPLY)
+    await GCD.setVariable('_balances', {
+      [alice.address]: INITIAL_TOTAL_L1_SUPPLY,
+    })
+
     // Deploy the contract under test
     L1StandardBridge = await deploy('L1StandardBridge')
     await L1StandardBridge.initialize(
       Fake__L1CrossDomainMessenger.address,
-      DUMMY_L2_BRIDGE_ADDRESS
+      DUMMY_L2_BRIDGE_ADDRESS,
+      GCD.address
     )
 
     L1ERC20 = await (
@@ -59,7 +69,8 @@ describe('L1StandardBridge', () => {
       await expect(
         L1StandardBridge.initialize(
           ethers.constants.AddressZero,
-          DUMMY_L2_BRIDGE_ADDRESS
+          DUMMY_L2_BRIDGE_ADDRESS,
+          GCD.address
         )
       ).to.be.revertedWith(ERROR_STRINGS.ALREADY_INITIALIZED)
     })
@@ -79,16 +90,18 @@ describe('L1StandardBridge', () => {
   describe('ETH deposits', () => {
     const depositAmount = 1_000
 
-    it('depositETH() escrows the deposit amount and sends the correct deposit message', async () => {
+    beforeEach(async () => {
+      await GCD.connect(alice).approve(L1StandardBridge.address, depositAmount)
+    })
+
+    it('depositGCD() escrows the deposit amount and sends the correct deposit message', async () => {
       const initialBalance = await alice.getBalance()
 
       // alice calls deposit on the bridge and the L1 bridge calls transferFrom on the token
-      const res = await L1StandardBridge.connect(alice).depositETH(
+      const res = await L1StandardBridge.connect(alice).depositGCD(
+        depositAmount,
         FINALIZATION_GAS,
-        NON_NULL_BYTES32,
-        {
-          value: depositAmount,
-        }
+        NON_NULL_BYTES32
       )
 
       expect(
@@ -99,7 +112,7 @@ describe('L1StandardBridge', () => {
           'finalizeDeposit',
           [
             constants.AddressZero,
-            predeploys.OVM_ETH,
+            predeploys.OVM_GCD,
             alice.address,
             alice.address,
             depositAmount,
@@ -114,25 +127,27 @@ describe('L1StandardBridge', () => {
         receipt.effectiveGasPrice
       )
 
-      expect(await alice.getBalance()).to.equal(
-        initialBalance.sub(depositAmount).sub(depositerFeePaid)
+      expect(await GCD.balanceOf(alice.address)).to.equal(
+        INITIAL_TOTAL_L1_SUPPLY - depositAmount
       )
 
-      expect(
-        await ethers.provider.getBalance(L1StandardBridge.address)
-      ).to.equal(depositAmount)
+      expect(await GCD.balanceOf(L1StandardBridge.address)).to.equal(
+        depositAmount
+      )
+
+      expect(await alice.getBalance()).to.equal(
+        initialBalance.sub(depositerFeePaid)
+      )
     })
 
-    it('depositETHTo() escrows the deposit amount and sends the correct deposit message', async () => {
+    it('depositGCDTo() escrows the deposit amount and sends the correct deposit message', async () => {
       const initialBalance = await alice.getBalance()
 
-      const res = await L1StandardBridge.connect(alice).depositETHTo(
+      const res = await L1StandardBridge.connect(alice).depositGCDTo(
         bob.address,
+        depositAmount,
         FINALIZATION_GAS,
-        NON_NULL_BYTES32,
-        {
-          value: depositAmount,
-        }
+        NON_NULL_BYTES32
       )
 
       expect(
@@ -143,7 +158,7 @@ describe('L1StandardBridge', () => {
           'finalizeDeposit',
           [
             constants.AddressZero,
-            predeploys.OVM_ETH,
+            predeploys.OVM_GCD,
             alice.address,
             bob.address,
             depositAmount,
@@ -158,28 +173,34 @@ describe('L1StandardBridge', () => {
         receipt.effectiveGasPrice
       )
 
-      expect(await alice.getBalance()).to.equal(
-        initialBalance.sub(depositAmount).sub(depositerFeePaid)
+      expect(await GCD.balanceOf(alice.address)).to.equal(
+        INITIAL_TOTAL_L1_SUPPLY - depositAmount
       )
 
-      expect(
-        await ethers.provider.getBalance(L1StandardBridge.address)
-      ).to.equal(depositAmount)
+      expect(await GCD.balanceOf(L1StandardBridge.address)).to.equal(
+        depositAmount
+      )
+
+      expect(await alice.getBalance()).to.equal(
+        initialBalance.sub(depositerFeePaid)
+      )
     })
 
-    it('cannot depositETH from a contract account', async () => {
+    it('cannot depositGCD from a contract account', async () => {
       expect(
-        L1StandardBridge.depositETH(FINALIZATION_GAS, NON_NULL_BYTES32, {
-          value: depositAmount,
-        })
+        L1StandardBridge.depositGCD(
+          depositAmount,
+          FINALIZATION_GAS,
+          NON_NULL_BYTES32
+        )
       ).to.be.revertedWith('Account not EOA')
     })
   })
 
-  describe('ETH withdrawals', () => {
+  describe('GCD withdrawals', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L1 account', async () => {
       await expect(
-        L1StandardBridge.connect(alice).finalizeETHWithdrawal(
+        L1StandardBridge.connect(alice).finalizeGCDWithdrawal(
           constants.AddressZero,
           constants.AddressZero,
           1,
@@ -194,7 +215,7 @@ describe('L1StandardBridge', () => {
       )
 
       await expect(
-        L1StandardBridge.finalizeETHWithdrawal(
+        L1StandardBridge.finalizeGCDWithdrawal(
           constants.AddressZero,
           constants.AddressZero,
           1,
@@ -214,7 +235,7 @@ describe('L1StandardBridge', () => {
       )
 
       await expect(
-        L1StandardBridge.finalizeETHWithdrawal(
+        L1StandardBridge.finalizeGCDWithdrawal(
           NON_ZERO_ADDRESS,
           NON_ZERO_ADDRESS,
           100,
@@ -223,9 +244,8 @@ describe('L1StandardBridge', () => {
             from: Fake__L1CrossDomainMessenger.address,
           }
         )
-      ).to.be.revertedWith(
-        'TransferHelper::safeTransferETH: ETH transfer failed'
-      )
+        // TODO: check
+      ).to.be.revertedWith('panic code')
     })
 
     it('should credit funds to the withdrawer and not use too much gas', async () => {
@@ -236,15 +256,17 @@ describe('L1StandardBridge', () => {
         DUMMY_L2_BRIDGE_ADDRESS
       )
 
-      await L1StandardBridge.connect(alice).depositETH(
+      await GCD.connect(alice).approve(
+        L1StandardBridge.address,
+        withdrawalAmount
+      )
+      await L1StandardBridge.connect(alice).depositGCD(
+        withdrawalAmount,
         FINALIZATION_GAS,
-        NON_NULL_BYTES32,
-        {
-          value: ethers.utils.parseEther('1.0'),
-        }
+        NON_NULL_BYTES32
       )
 
-      await L1StandardBridge.finalizeETHWithdrawal(
+      await L1StandardBridge.finalizeGCDWithdrawal(
         NON_ZERO_ADDRESS,
         NON_ZERO_ADDRESS,
         withdrawalAmount,
@@ -254,7 +276,7 @@ describe('L1StandardBridge', () => {
         }
       )
 
-      expect(await ethers.provider.getBalance(NON_ZERO_ADDRESS)).to.be.equal(
+      expect(await GCD.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(
         withdrawalAmount
       )
     })
@@ -512,14 +534,14 @@ describe('L1StandardBridge', () => {
     })
   })
 
-  describe('donateETH', () => {
+  describe('donateNative', () => {
     it('it should just call the function', async () => {
-      await expect(L1StandardBridge.donateETH()).to.not.be.reverted
+      await expect(L1StandardBridge.donateNative()).to.not.be.reverted
     })
 
-    it('should send ETH to the contract account', async () => {
+    it('should send native token to the contract account', async () => {
       await expect(
-        L1StandardBridge.donateETH({
+        L1StandardBridge.donateNative({
           value: 100,
         })
       ).to.not.be.reverted

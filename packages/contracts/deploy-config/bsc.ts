@@ -1,0 +1,22 @@
+const config = {
+  numDeployConfirmations: 4,
+  gasPrice: 10_000_000_000,
+  l1BlockTimeSeconds: 3,
+  l2BlockGasLimit: 15_000_000,
+  l2ChainId: 1000,
+  ctcL2GasDiscountDivisor: 32,
+  ctcEnqueueGasCost: 60_000,
+  sccFaultProofWindowSeconds: 604800,
+  sccSequencerPublishWindowSeconds: 12592000,
+  ovmSequencerAddress: '0x0dcFD1f9A44d924Fd457b696B457c142D7246Df7',
+  ovmProposerAddress: '0x903f787ab0D7634A221929781f767656Cf3F7B27',
+  ovmBlockSignerAddress: '0x00000398232E2064F896018496b4b44b3D62751F',
+  ovmFeeWalletAddress: '0x5dA4b282eb0D588A5e526d1eFaee8679f8cF242e',
+  ovmAddressManagerOwner: '0x5dA4b282eb0D588A5e526d1eFaee8679f8cF242e',
+  ovmGasPriceOracleOwner: '0x1c1E012E279378225d35040B536015849Ae2B322',
+  ovmWhitelistOwner: '0x5dA4b282eb0D588A5e526d1eFaee8679f8cF242e',
+  gcdAddress: '0x213ecAe6b3CbC0AD976f7d82626546d5b63A71cB',
+  hfBerlinBlock: +process.env.DEPLOYER_BERLIN_BLOCK || 0,
+}
+
+export default config

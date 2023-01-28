@@ -1521,7 +1521,7 @@ describe('CrossChainMessenger', () => {
     })
   })
 
-  describe('depositETH', () => {
+  describe('depositGCD', () => {
     let l1Messenger: Contract
     let l2Messenger: Contract
     let l1Bridge: Contract
@@ -1567,8 +1567,8 @@ describe('CrossChainMessenger', () => {
     })
 
     it('should trigger the deposit ETH function with the given amount', async () => {
-      await expect(messenger.depositETH(100000))
-        .to.emit(l1Bridge, 'ETHDepositInitiated')
+      await expect(messenger.depositGCD(100000))
+        .to.emit(l1Bridge, 'GCDDepositInitiated')
         .withArgs(
           await l1Signer.getAddress(),
           await l1Signer.getAddress(),
@@ -1628,7 +1628,7 @@ describe('CrossChainMessenger', () => {
         .to.emit(l2Bridge, 'WithdrawalInitiated')
         .withArgs(
           ethers.constants.AddressZero,
-          predeploys.OVM_ETH,
+          predeploys.OVM_GCD,
           await l2Signer.getAddress(),
           await l2Signer.getAddress(),
           100000,

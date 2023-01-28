@@ -24,6 +24,7 @@ export const DEPOSIT_CONFIRMATION_BLOCKS: {
   [L2ChainID.OPTIMISM_HARDHAT_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_LOCAL_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_ALPHA_TESTNET]: 12 as const,
+  [L2ChainID.BSC_TESTNET]: 12 as const,
 }
 
 export const CHAIN_BLOCK_TIMES: {
@@ -47,10 +48,10 @@ export const DEFAULT_L2_CONTRACT_ADDRESSES: OEL2ContractsLike = {
   OVM_L1BlockNumber: predeploys.OVM_L1BlockNumber,
   OVM_L2ToL1MessagePasser: predeploys.OVM_L2ToL1MessagePasser,
   OVM_DeployerWhitelist: predeploys.OVM_DeployerWhitelist,
-  OVM_ETH: predeploys.OVM_ETH,
+  OVM_GCD: predeploys.OVM_GCD,
   OVM_GasPriceOracle: predeploys.OVM_GasPriceOracle,
   OVM_SequencerFeeVault: predeploys.OVM_SequencerFeeVault,
-  WETH: predeploys.WETH9,
+  WGCD: predeploys.WGCD,
   BedrockMessagePasser: bedrockPredeploys.L2ToL1MessagePasser,
 }
 
@@ -148,6 +149,23 @@ export const CONTRACT_ADDRESSES: {
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
   [L2ChainID.OPTIMISM_BEDROCK_ALPHA_TESTNET]: {
+    l1: {
+      AddressManager: '0xb4e08DcE1F323608229265c9d4125E22a4B9dbAF' as const,
+      L1CrossDomainMessenger:
+        '0x838a6DC4E37CA45D4Ef05bb776bf05eEf50798De' as const,
+      L1StandardBridge: '0xFf94B6C486350aD92561Ba09bad3a59df764Da92' as const,
+      StateCommitmentChain:
+        '0x0000000000000000000000000000000000000000' as const,
+      CanonicalTransactionChain:
+        '0x0000000000000000000000000000000000000000' as const,
+      BondManager: '0x0000000000000000000000000000000000000000' as const,
+      OptimismPortal: '0xA581Ca3353DB73115C4625FFC7aDF5dB379434A8' as const,
+      L2OutputOracle: '0x3A234299a14De50027eA65dCdf1c0DaC729e04A6' as const,
+    },
+    l2: DEFAULT_L2_CONTRACT_ADDRESSES,
+  },
+  // Need updating once the deployment is done
+  [L2ChainID.BSC_TESTNET]: {
     l1: {
       AddressManager: '0xb4e08DcE1F323608229265c9d4125E22a4B9dbAF' as const,
       L1CrossDomainMessenger:

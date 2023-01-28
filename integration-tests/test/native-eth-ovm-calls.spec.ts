@@ -124,16 +124,16 @@ describe('Native ETH value integration tests', () => {
       )
       // query ovmSELFBALANCE() opcode via eth_call as another check
       const ovmEthBalanceOf0 =
-        await env.messenger.contracts.l2.OVM_ETH.balanceOf(ValueCalls0.address)
+        await env.messenger.contracts.l2.OVM_GCD.balanceOf(ValueCalls0.address)
       const ovmEthBalanceOf1 =
-        await env.messenger.contracts.l2.OVM_ETH.balanceOf(ValueCalls1.address)
+        await env.messenger.contracts.l2.OVM_GCD.balanceOf(ValueCalls1.address)
       expect(ovmEthBalanceOf0).to.deep.eq(
         BigNumber.from(expectedBalances[0]),
-        'geth RPC does not match OVM_ETH.balanceOf'
+        'geth RPC does not match OVM_GCD.balanceOf'
       )
       expect(ovmEthBalanceOf1).to.deep.eq(
         BigNumber.from(expectedBalances[1]),
-        'geth RPC does not match OVM_ETH.balanceOf'
+        'geth RPC does not match OVM_GCD.balanceOf'
       )
       // query address(this).balance solidity via eth_call as final check
       const ovmAddressThisBalance0 =

@@ -113,11 +113,11 @@ describe('Fee Payment Integration Tests', async () => {
       .attach(predeploys.OVM_GasPriceOracle)
       .connect(env.l2Wallet)
 
-    const WETH = getContractFactory('OVM_ETH')
-      .attach(predeploys.OVM_ETH)
+    const WGCD = getContractFactory('OVM_GCD')
+      .attach(predeploys.OVM_GCD)
       .connect(env.l2Wallet)
 
-    const feeVaultBefore = await WETH.balanceOf(
+    const feeVaultBefore = await WGCD.balanceOf(
       predeploys.OVM_SequencerFeeVault
     )
 
@@ -143,7 +143,7 @@ describe('Fee Payment Integration Tests', async () => {
     const receipt = await tx.wait()
     const l2Fee = receipt.gasUsed.mul(tx.gasPrice)
     const postBalance = await env.l2Wallet.getBalance()
-    const feeVaultAfter = await WETH.balanceOf(predeploys.OVM_SequencerFeeVault)
+    const feeVaultAfter = await WGCD.balanceOf(predeploys.OVM_SequencerFeeVault)
     const fee = l1Fee.add(l2Fee)
     const balanceDiff = preBalance.sub(postBalance)
     const feeReceived = feeVaultAfter.sub(feeVaultBefore)
@@ -176,7 +176,7 @@ describe('Fee Payment Integration Tests', async () => {
       })
       await tx.wait()
 
-      const vaultBalance = await env.messenger.contracts.l2.OVM_ETH.balanceOf(
+      const vaultBalance = await env.messenger.contracts.l2.OVM_GCD.balanceOf(
         env.messenger.contracts.l2.OVM_SequencerFeeVault.address
       )
 

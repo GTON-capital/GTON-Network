@@ -31,6 +31,8 @@ export enum L2ChainID {
   OPTIMISM_HARDHAT_DEVNET = 17,
   OPTIMISM_BEDROCK_LOCAL_DEVNET = 901,
   OPTIMISM_BEDROCK_ALPHA_TESTNET = 28528,
+
+  BSC_TESTNET = 50021,
 }
 
 /**
@@ -58,10 +60,10 @@ export interface OEL2Contracts {
   OVM_L1BlockNumber: Contract
   OVM_L2ToL1MessagePasser: Contract
   OVM_DeployerWhitelist: Contract
-  OVM_ETH: Contract
+  OVM_GCD: Contract
   OVM_GasPriceOracle: Contract
   OVM_SequencerFeeVault: Contract
-  WETH: Contract
+  WGCD: Contract
   BedrockMessagePasser: Contract
 }
 

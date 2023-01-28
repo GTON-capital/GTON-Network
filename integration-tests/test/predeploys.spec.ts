@@ -12,35 +12,35 @@ describe('predeploys', () => {
     env = await OptimismEnv.new()
   })
 
-  describe('WETH9', () => {
-    let weth9: ethers.Contract
+  describe('WGCD', () => {
+    let wgcd: ethers.Contract
     before(() => {
-      weth9 = new ethers.Contract(
-        predeploys.WETH9,
-        getContractInterface('WETH9'),
+      wgcd = new ethers.Contract(
+        predeploys.WGCD,
+        getContractInterface('WGCD'),
         env.l2Wallet
       )
     })
 
     it('should have the correct name', async () => {
-      expect(await weth9.name()).to.equal('Wrapped Ether')
+      expect(await wgcd.name()).to.equal('Wrapped GCD')
     })
 
     it('should have the correct symbol', async () => {
-      expect(await weth9.symbol()).to.equal('WETH')
+      expect(await wgcd.symbol()).to.equal('WGCD')
     })
 
     it('should have the correct decimals', async () => {
-      expect(await weth9.decimals()).to.equal(18)
+      expect(await wgcd.decimals()).to.equal(18)
     })
   })
 
-  describe('OVM_ETH', () => {
+  describe('OVM_GCD', () => {
     let ovmEth: ethers.Contract
     before(() => {
       ovmEth = new ethers.Contract(
-        predeploys.OVM_ETH,
-        getContractInterface('OVM_ETH'),
+        predeploys.OVM_GCD,
+        getContractInterface('OVM_GCD'),
         env.l2Wallet
       )
     })

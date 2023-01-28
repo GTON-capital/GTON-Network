@@ -6,7 +6,7 @@
 
 
 
-*The L1 ETH and ERC20 Bridge is a contract which stores deposited L1 funds and standard tokens that are in use on L2. It synchronizes a corresponding L2 Bridge, informing it of deposits and listening to it for newly finalized withdrawals.*
+*The L1 GCD and ERC20 Bridge is a contract which stores deposited L1 funds and standard tokens that are in use on L2. It synchronizes a corresponding L2 Bridge, informing it of deposits and listening to it for newly finalized withdrawals.*
 
 ## Methods
 
@@ -51,10 +51,10 @@ function depositERC20To(address _l1Token, address _l2Token, address _to, uint256
 | _l2Gas | uint32 | Gas limit required to complete the deposit on L2.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
-### depositETH
+### depositGCD
 
 ```solidity
-function depositETH(uint32 _l2Gas, bytes _data) external payable
+function depositGCD(uint256 _amount, uint32 _l2Gas, bytes _data) external nonpayable
 ```
 
 
@@ -65,13 +65,14 @@ function depositETH(uint32 _l2Gas, bytes _data) external payable
 
 | Name | Type | Description |
 |---|---|---|
+| _amount | uint256 | Amount of the GCD to deposit.
 | _l2Gas | uint32 | Gas limit required to complete the deposit on L2.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
-### depositETHTo
+### depositGCDTo
 
 ```solidity
-function depositETHTo(address _to, uint32 _l2Gas, bytes _data) external payable
+function depositGCDTo(address _to, uint256 _amount, uint32 _l2Gas, bytes _data) external nonpayable
 ```
 
 
@@ -83,6 +84,7 @@ function depositETHTo(address _to, uint32 _l2Gas, bytes _data) external payable
 | Name | Type | Description |
 |---|---|---|
 | _to | address | L2 address to credit the withdrawal to.
+| _amount | uint256 | Amount of the GCD to deposit.
 | _l2Gas | uint32 | Gas limit required to complete the deposit on L2.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
@@ -109,15 +111,15 @@ function deposits(address, address) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
-### donateETH
+### donateNative
 
 ```solidity
-function donateETH() external payable
+function donateNative() external payable
 ```
 
 
 
-*Adds ETH balance to the account. This is meant to allow for ETH to be migrated from an old gateway to a new gateway. NOTE: This is left for one upgrade only so we are able to receive the migrated ETH from the old contract*
+*Adds native token balance to the account. This is meant to allow for native token to be migrated from an old gateway to a new gateway. NOTE: This is left for one upgrade only so we are able to receive the migrated native token from the old contract*
 
 
 ### finalizeERC20Withdrawal
@@ -141,15 +143,15 @@ function finalizeERC20Withdrawal(address _l1Token, address _l2Token, address _fr
 | _amount | uint256 | Amount of the ERC20 to deposit.
 | _data | bytes | Data provided by the sender on L2. This data is provided   solely as a convenience for external contracts. Aside from enforcing a maximum   length, these contracts provide no guarantees about its content.
 
-### finalizeETHWithdrawal
+### finalizeGCDWithdrawal
 
 ```solidity
-function finalizeETHWithdrawal(address _from, address _to, uint256 _amount, bytes _data) external nonpayable
+function finalizeGCDWithdrawal(address _from, address _to, uint256 _amount, bytes _data) external nonpayable
 ```
 
 
 
-*Complete a withdrawal from L2 to L1, and credit funds to the recipient&#39;s balance of the L1 ETH token. Since only the xDomainMessenger can call this function, it will never be called before the withdrawal is finalized.*
+*Complete a withdrawal from L2 to L1, and credit funds to the recipient&#39;s balance of the L1 GCD token. Since only the xDomainMessenger can call this function, it will never be called before the withdrawal is finalized.*
 
 #### Parameters
 
@@ -160,10 +162,27 @@ function finalizeETHWithdrawal(address _from, address _to, uint256 _amount, byte
 | _amount | uint256 | Amount of the ERC20 to deposit.
 | _data | bytes | Optional data to forward to L2. This data is provided        solely as a convenience for external contracts. Aside from enforcing a maximum        length, these contracts provide no guarantees about its content.
 
+### gcd
+
+```solidity
+function gcd() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined
+
 ### initialize
 
 ```solidity
-function initialize(address _l1messenger, address _l2TokenBridge) external nonpayable
+function initialize(address _l1messenger, address _l2TokenBridge, address _gcd) external nonpayable
 ```
 
 
@@ -176,6 +195,7 @@ function initialize(address _l1messenger, address _l2TokenBridge) external nonpa
 |---|---|---|
 | _l1messenger | address | L1 Messenger address being used for cross-chain communications.
 | _l2TokenBridge | address | L2 standard bridge address.
+| _gcd | address | undefined
 
 ### l2TokenBridge
 
@@ -257,10 +277,10 @@ event ERC20WithdrawalFinalized(address indexed _l1Token, address indexed _l2Toke
 | _amount  | uint256 | undefined |
 | _data  | bytes | undefined |
 
-### ETHDepositInitiated
+### GCDDepositInitiated
 
 ```solidity
-event ETHDepositInitiated(address indexed _from, address indexed _to, uint256 _amount, bytes _data)
+event GCDDepositInitiated(address indexed _from, address indexed _to, uint256 _amount, bytes _data)
 ```
 
 
@@ -276,10 +296,10 @@ event ETHDepositInitiated(address indexed _from, address indexed _to, uint256 _a
 | _amount  | uint256 | undefined |
 | _data  | bytes | undefined |
 
-### ETHWithdrawalFinalized
+### GCDWithdrawalFinalized
 
 ```solidity
-event ETHWithdrawalFinalized(address indexed _from, address indexed _to, uint256 _amount, bytes _data)
+event GCDWithdrawalFinalized(address indexed _from, address indexed _to, uint256 _amount, bytes _data)
 ```
 
 

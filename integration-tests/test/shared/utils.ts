@@ -171,7 +171,7 @@ export const gasPriceOracleWallet = new Wallet(
 )
 
 // Predeploys
-export const OVM_ETH_ADDRESS = predeploys.OVM_ETH
+export const OVM_GCD_ADDRESS = predeploys.OVM_GCD
 
 export const L2_CHAINID = procEnv.L2_CHAINID
 
@@ -181,7 +181,7 @@ export const fundUser = async (
   recipient?: string
 ) => {
   await messenger.waitForMessageReceipt(
-    await messenger.depositETH(amount, {
+    await messenger.depositGCD(amount, {
       l2GasLimit: DEFAULT_TEST_GAS_L2,
       overrides: {
         gasPrice: DEFAULT_TEST_GAS_L1,
