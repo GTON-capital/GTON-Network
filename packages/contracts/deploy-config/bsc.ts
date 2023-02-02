@@ -1,7 +1,7 @@
 const config = {
   numDeployConfirmations: 4,
-  gasPrice: 10_000_000_000,
-  gasPriceOracleL2GasPrice: 300_000_000,
+  gasPrice: 1_000_000,
+  gasPriceOracleL2GasPrice: 1_000_000,
   gasPriceOracleL1BaseFee: 3_100_000_000_000,
   gasPriceOracleOverhead: 2750,
   gasPriceOracleScalar: 1_000_000,
