@@ -67,8 +67,8 @@ task('take-dump').setAction(async ({}, hre) => {
     OVM_GCD: {
       l2Bridge: predeploys.L2StandardBridge,
       l1Token: ethers.constants.AddressZero,
-      _name: 'Ether',
-      _symbol: 'ETH',
+      _name: 'GCD',
+      _symbol: 'GCD',
     },
     L2CrossDomainMessenger: {
       // We default the xDomainMsgSender to this value to save gas.
