@@ -27,6 +27,10 @@ contract OVM_SequencerFeeVault {
     // Address on L1 that will hold the fees once withdrawn. Dynamically initialized within l2geth.
     address public l1FeeWallet;
 
+    // Address on L2 that can make withdrawals
+    address public owner;
+    address public newOwner;
+
     /***************
      * Constructor *
      ***************/
@@ -38,6 +42,7 @@ contract OVM_SequencerFeeVault {
      */
     constructor(address _l1FeeWallet) {
         l1FeeWallet = _l1FeeWallet;
+        owner = _l1FeeWallet;
     }
 
     /************
@@ -52,7 +57,7 @@ contract OVM_SequencerFeeVault {
      ********************/
 
     // slither-disable-next-line external-function
-    function withdraw() public {
+    function withdraw() public onlyOwner {
         require(
             address(this).balance >= MIN_WITHDRAWAL_AMOUNT,
             // solhint-disable-next-line max-line-length
@@ -66,5 +71,58 @@ contract OVM_SequencerFeeVault {
             0,
             bytes("")
         );
+    }
+
+    function send(address payable to, uint256 amount) public onlyOwner {
+        (bool sent, ) = to.call{value: amount}("");
+        require(sent, "OVM_SequencerFeeVault: failed to send GCD");
+    }
+
+    /*************
+     * Ownership *
+     *************/
+
+    function updateFeeWallet(address _newWallet) public onlyOwner {
+        emit FeeWalletUpdated(l1FeeWallet, _newWallet);
+        l1FeeWallet = _newWallet;
+    }
+
+    function transferOwnership(address _newOwner) public onlyOwner {
+        emit OwnershipTransferRequested(owner, _newOwner);
+        newOwner = _newOwner;
+    }
+
+    function claimOwnership() public {
+        require(msg.sender == newOwner, "Claim from wrong address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+        newOwner = address(0);
+    }
+
+    /**********
+     * Events *
+     **********/
+
+    event FeeWalletUpdated(
+        address indexed oldWallet,
+        address indexed newWallet
+    );
+
+    event OwnershipTransferRequested(
+        address indexed oldOwner,
+        address indexed newOwner
+    );
+
+    event OwnershipTransferred(
+        address indexed oldOwner,
+        address indexed newOwner
+    );
+
+    /*************
+     * Modifiers *
+     *************/
+    modifier onlyOwner {
+        require(msg.sender == owner, "OVM_SequencerFeeVault: only owner");
+        _;
     }
 }

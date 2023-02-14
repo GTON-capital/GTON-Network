@@ -24,6 +24,7 @@ export const DEPOSIT_CONFIRMATION_BLOCKS: {
   [L2ChainID.OPTIMISM_HARDHAT_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_LOCAL_DEVNET]: 2 as const,
   [L2ChainID.OPTIMISM_BEDROCK_ALPHA_TESTNET]: 12 as const,
+  [L2ChainID.BSC]: 12 as const,
   [L2ChainID.BSC_TESTNET]: 12 as const,
 }
 
@@ -164,20 +165,35 @@ export const CONTRACT_ADDRESSES: {
     },
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
-  // Need updating once the deployment is done
+  [L2ChainID.BSC]: {
+    l1: {
+      AddressManager: '0x8f29435e413186D714298855AcD333FA9c1716C8' as const,
+      L1CrossDomainMessenger:
+        '0x645B292dCE0F040c8c81208b6a64249ef5b640E8' as const,
+      L1StandardBridge: '0x6d0E7094a385396F78399b5c679be09d8702555B' as const,
+      StateCommitmentChain:
+        '0x06ff68a14521325347d76a730602faA9Fd854B74' as const,
+      CanonicalTransactionChain:
+        '0xbefED715F71Ba41125589e97F84210D979D0F539' as const,
+      BondManager: '0x1F8D1Dc7320f204920A168f896FD96e4CCD581c5' as const,
+      OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
+      L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
+    },
+    l2: DEFAULT_L2_CONTRACT_ADDRESSES,
+  },
   [L2ChainID.BSC_TESTNET]: {
     l1: {
-      AddressManager: '0xb4e08DcE1F323608229265c9d4125E22a4B9dbAF' as const,
+      AddressManager: '0xD90Bf4d20963b5136689C20Df6fA4447FeD46c1F' as const,
       L1CrossDomainMessenger:
-        '0x838a6DC4E37CA45D4Ef05bb776bf05eEf50798De' as const,
-      L1StandardBridge: '0xFf94B6C486350aD92561Ba09bad3a59df764Da92' as const,
+        '0x2984B2FEa6208A623038d18a57FB7c81921B31C9' as const,
+      L1StandardBridge: '0xbcAf2aCCc02034AAd3444c434270491A97e7BE2A' as const,
       StateCommitmentChain:
-        '0x0000000000000000000000000000000000000000' as const,
+        '0x59A5CA8B368a09E5a4ea58Bf2BE21B792433Dc68' as const,
       CanonicalTransactionChain:
-        '0x0000000000000000000000000000000000000000' as const,
-      BondManager: '0x0000000000000000000000000000000000000000' as const,
-      OptimismPortal: '0xA581Ca3353DB73115C4625FFC7aDF5dB379434A8' as const,
-      L2OutputOracle: '0x3A234299a14De50027eA65dCdf1c0DaC729e04A6' as const,
+        '0xc2FF9E1970F912f2A8022e4704A5E216c8590096' as const,
+      BondManager: '0xA436583030D9A5bfFcDBdF959663d186B934D668' as const,
+      OptimismPortal: '0x0000000000000000000000000000000000000000' as const,
+      L2OutputOracle: '0x0000000000000000000000000000000000000000' as const,
     },
     l2: DEFAULT_L2_CONTRACT_ADDRESSES,
   },
