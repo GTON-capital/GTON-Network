@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"time"
+
+	"github.com/libp2p/go-libp2p/core/network"
 
 	lconf "github.com/libp2p/go-libp2p/config"
 	"github.com/libp2p/go-libp2p/core/connmgr"
@@ -13,6 +16,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	basichost "github.com/libp2p/go-libp2p/p2p/host/basic"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoreds"
+	"github.com/libp2p/go-libp2p/p2p/muxer/mplex"
+	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
+	tls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	ma "github.com/multiformats/go-multiaddr"
 	madns "github.com/multiformats/go-multiaddr-dns"
@@ -30,6 +37,11 @@ type extraHost struct {
 	host.Host
 	gater   ConnectionGater
 	connMgr connmgr.ConnManager
+	log     log.Logger
+
+	staticPeers []*peer.AddrInfo
+
+	quitC chan struct{}
 }
 
 func (e *extraHost) ConnectionGater() ConnectionGater {
@@ -38,6 +50,73 @@ func (e *extraHost) ConnectionGater() ConnectionGater {
 
 func (e *extraHost) ConnectionManager() connmgr.ConnManager {
 	return e.connMgr
+}
+
+func (e *extraHost) Close() error {
+	close(e.quitC)
+	return e.Host.Close()
+}
+
+func (e *extraHost) initStaticPeers() {
+	for _, addr := range e.staticPeers {
+		e.Peerstore().AddAddrs(addr.ID, addr.Addrs, time.Hour*24*7)
+		// We protect the peer, so the connection manager doesn't decide to prune it.
+		// We tag it with "static" so other protects/unprotects with different tags don't affect this protection.
+		e.connMgr.Protect(addr.ID, "static")
+		// Try to dial the node in the background
+		go func(addr *peer.AddrInfo) {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+			defer cancel()
+			if err := e.dialStaticPeer(ctx, addr); err != nil {
+				e.log.Warn("error dialing static peer", "peer", addr.ID, "err", err)
+			}
+		}(addr)
+	}
+}
+
+func (e *extraHost) dialStaticPeer(ctx context.Context, addr *peer.AddrInfo) error {
+	e.log.Info("dialing static peer", "peer", addr.ID, "addrs", addr.Addrs)
+	if _, err := e.Network().DialPeer(ctx, addr.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *extraHost) monitorStaticPeers() {
+	tick := time.NewTicker(time.Minute)
+	defer tick.Stop()
+
+	for {
+		select {
+		case <-tick.C:
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+			var wg sync.WaitGroup
+
+			e.log.Debug("polling static peers", "peers", len(e.staticPeers))
+			for _, addr := range e.staticPeers {
+				connectedness := e.Network().Connectedness(addr.ID)
+				e.log.Trace("static peer connectedness", "peer", addr.ID, "connectedness", connectedness)
+
+				if connectedness == network.Connected {
+					continue
+				}
+
+				wg.Add(1)
+				go func(addr *peer.AddrInfo) {
+					e.log.Warn("static peer disconnected, reconnecting", "peer", addr.ID)
+					if err := e.dialStaticPeer(ctx, addr); err != nil {
+						e.log.Warn("error reconnecting to static peer", "peer", addr.ID, "err", err)
+					}
+					wg.Done()
+				}(addr)
+			}
+
+			wg.Wait()
+			cancel()
+		case <-e.quitC:
+			return
+		}
+	}
 }
 
 var _ ExtraHostFeatures = (*extraHost)(nil)
@@ -138,26 +217,28 @@ func (conf *Config) Host(log log.Logger, reporter metrics.Reporter) (host.Host, 
 	if err != nil {
 		return nil, err
 	}
-	for _, peerAddr := range conf.StaticPeers {
+
+	staticPeers := make([]*peer.AddrInfo, len(conf.StaticPeers))
+	for i, peerAddr := range conf.StaticPeers {
 		addr, err := peer.AddrInfoFromP2pAddr(peerAddr)
 		if err != nil {
 			return nil, fmt.Errorf("bad peer address: %w", err)
 		}
-		h.Peerstore().AddAddrs(addr.ID, addr.Addrs, time.Hour*24*7)
-		// We protect the peer, so the connection manager doesn't decide to prune it.
-		// We tag it with "static" so other protects/unprotects with different tags don't affect this protection.
-		connMngr.Protect(addr.ID, "static")
-		// Try to dial the node in the background
-		go func() {
-			log.Info("Dialing static peer", "peer", addr.ID, "addrs", addr.Addrs)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-			defer cancel()
-			if _, err := h.Network().DialPeer(ctx, addr.ID); err != nil {
-				log.Warn("Failed to dial static peer", "peer", addr.ID, "addrs", addr.Addrs)
-			}
-		}()
+		staticPeers[i] = addr
 	}
-	out := &extraHost{Host: h, connMgr: connMngr}
+
+	out := &extraHost{
+		Host:        h,
+		connMgr:     connMngr,
+		log:         log,
+		staticPeers: staticPeers,
+		quitC:       make(chan struct{}),
+	}
+	out.initStaticPeers()
+	if len(conf.StaticPeers) > 0 {
+		go out.monitorStaticPeers()
+	}
+
 	// Only add the connection gater if it offers the full interface we're looking for.
 	if g, ok := connGtr.(ConnectionGater); ok {
 		out.gater = g
@@ -174,4 +255,36 @@ func addrFromIPAndPort(ip net.IP, port uint16) (ma.Multiaddr, error) {
 		ip = ip4
 	}
 	return ma.NewMultiaddr(fmt.Sprintf("/%s/%s/tcp/%d", ipScheme, ip.String(), port))
+}
+
+func YamuxC() (lconf.MsMuxC, error) {
+	mtpt, err := lconf.MuxerConstructor(yamux.DefaultTransport)
+	if err != nil {
+		return lconf.MsMuxC{}, err
+	}
+	return lconf.MsMuxC{MuxC: mtpt, ID: "/yamux/1.0.0"}, nil
+}
+
+func MplexC() (lconf.MsMuxC, error) {
+	mtpt, err := lconf.MuxerConstructor(mplex.DefaultTransport)
+	if err != nil {
+		return lconf.MsMuxC{}, err
+	}
+	return lconf.MsMuxC{MuxC: mtpt, ID: "/mplex/6.7.0"}, nil
+}
+
+func NoiseC() (lconf.MsSecC, error) {
+	stpt, err := lconf.SecurityConstructor(noise.New)
+	if err != nil {
+		return lconf.MsSecC{}, err
+	}
+	return lconf.MsSecC{SecC: stpt, ID: noise.ID}, nil
+}
+
+func TlsC() (lconf.MsSecC, error) {
+	stpt, err := lconf.SecurityConstructor(tls.New)
+	if err != nil {
+		return lconf.MsSecC{}, err
+	}
+	return lconf.MsSecC{SecC: stpt, ID: tls.ID}, nil
 }

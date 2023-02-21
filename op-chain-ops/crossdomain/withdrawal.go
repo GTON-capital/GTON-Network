@@ -2,11 +2,23 @@ package crossdomain
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
+	"github.com/ethereum-optimism/optimism/op-bindings/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+)
+
+var (
+	SentMessageEventABI               = "SentMessage(address,address,bytes,uint256)"
+	SentMessageEventABIHash           = crypto.Keccak256Hash([]byte(SentMessageEventABI))
+	SentMessageExtension1EventABI     = "SentMessage(address,uint256)"
+	SentMessageExtension1EventABIHash = crypto.Keccak256Hash([]byte(SentMessageExtension1EventABI))
+	MessagePassedEventABI             = "MessagePassed(uint256,address,address,uint256,uint256,bytes,bytes32)"
+	MessagePassedEventABIHash         = crypto.Keccak256Hash([]byte(MessagePassedEventABI))
 )
 
 var _ WithdrawalMessage = (*Withdrawal)(nil)
@@ -18,7 +30,7 @@ type Withdrawal struct {
 	Target   *common.Address `json:"target"`
 	Value    *big.Int        `json:"value"`
 	GasLimit *big.Int        `json:"gasLimit"`
-	Data     []byte          `json:"data"`
+	Data     hexutil.Bytes   `json:"data"`
 }
 
 // NewWithdrawal will create a Withdrawal
@@ -34,7 +46,7 @@ func NewWithdrawal(
 		Target:   target,
 		Value:    value,
 		GasLimit: gasLimit,
-		Data:     data,
+		Data:     hexutil.Bytes(data),
 	}
 }
 
@@ -48,9 +60,9 @@ func (w *Withdrawal) Encode() ([]byte, error) {
 		{Name: "gasLimit", Type: Uint256Type},
 		{Name: "data", Type: BytesType},
 	}
-	enc, err := args.Pack(w.Nonce, w.Sender, w.Target, w.Value, w.GasLimit, w.Data)
+	enc, err := args.Pack(w.Nonce, w.Sender, w.Target, w.Value, w.GasLimit, []byte(w.Data))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot encode withdrawal: %w", err)
 	}
 	return enc, nil
 }
@@ -100,7 +112,7 @@ func (w *Withdrawal) Decode(data []byte) error {
 	w.Target = &target
 	w.Value = value
 	w.GasLimit = gasLimit
-	w.Data = msgData
+	w.Data = hexutil.Bytes(msgData)
 	return nil
 }
 
@@ -129,4 +141,17 @@ func (w *Withdrawal) StorageSlot() (common.Hash, error) {
 
 	slot := crypto.Keccak256(preimage)
 	return common.BytesToHash(slot), nil
+}
+
+// WithdrawalTransaction will convert the Withdrawal to a type
+// suitable for sending a transaction.
+func (w *Withdrawal) WithdrawalTransaction() bindings.TypesWithdrawalTransaction {
+	return bindings.TypesWithdrawalTransaction{
+		Nonce:    w.Nonce,
+		Sender:   *w.Sender,
+		Target:   *w.Target,
+		Value:    w.Value,
+		GasLimit: w.GasLimit,
+		Data:     []byte(w.Data),
+	}
 }

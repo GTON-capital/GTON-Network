@@ -10,71 +10,27 @@ import { L1Block } from "../L2/L1Block.sol";
  * @custom:predeploy 0x420000000000000000000000000000000000000F
  * @title GasPriceOracle
  * @notice This contract maintains the variables responsible for computing the L1 portion of the
- *         total fee charged on L2. The values stored in the contract are looked up as part of the
- *         L2 state transition function and used to compute the total fee paid by the user. The
- *         contract exposes an API that is useful for knowing how large the L1 portion of their
- *         transaction fee will be.
+ *         total fee charged on L2. Before Bedrock, this contract held variables in state that were
+ *         read during the state transition function to compute the L1 portion of the transaction
+ *         fee. After Bedrock, this contract now simply proxies the L1Block contract, which has
+ *         the values used to compute the L1 portion of the fee in its state.
+ *
+ *         The contract exposes an API that is useful for knowing how large the L1 portion of the
+ *         transaction fee will be. The following events were deprecated with Bedrock:
+ *         - event OverheadUpdated(uint256 overhead);
+ *         - event ScalarUpdated(uint256 scalar);
+ *         - event DecimalsUpdated(uint256 decimals);
  */
 contract GasPriceOracle is Semver {
     /**
-     * @custom:legacy
-     * @custom:spacer _owner
-     * @notice Spacer for backwards compatibility.
-     */
-    address private spacer_0_0_20;
-
-    /**
-     * @custom:legacy
-     * @custom:spacer gasPrice
-     * @notice Spacer for backwards compatibility.
-     */
-    uint256 private spacer_1_0_32;
-
-    /**
-     * @custom:legacy
-     * @custom:spacer l1BaseFee
-     * @notice Spacer for backwards compatibility.
-     */
-    uint256 private spacer_2_0_32;
-
-    /**
-     * @custom:legacy
-     * @custom:spacer overhead
-     * @notice Spacer for backwards compatibility.
-     */
-    uint256 private spacer_3_0_32;
-
-    /**
-     * @custom:legacy
-     * @custom:spacer scalar
-     * @notice Spacer for backwards compatibility.
-     */
-    uint256 private spacer_4_0_32;
-
-    /**
      * @notice Number of decimals used in the scalar.
      */
-    uint256 public constant decimals = 6;
+    uint256 public constant DECIMALS = 6;
 
     /**
-     * @notice Emitted when the overhead value is updated.
+     * @custom:semver 1.0.0
      */
-    event OverheadUpdated(uint256 overhead);
-
-    /**
-     * @notice Emitted when the scalar value is updated.
-     */
-    event ScalarUpdated(uint256 scalar);
-
-    /**
-     * @notice Emitted when the decimals value is updated.
-     */
-    event DecimalsUpdated(uint256 decimals);
-
-    /**
-     * @custom:semver 0.0.1
-     */
-    constructor() Semver(0, 0, 1) {}
+    constructor() Semver(1, 0, 0) {}
 
     /**
      * @notice Computes the L1 portion of the fee based on the size of the rlp encoded input
@@ -87,7 +43,7 @@ contract GasPriceOracle is Semver {
     function getL1Fee(bytes memory _data) external view returns (uint256) {
         uint256 l1GasUsed = getL1GasUsed(_data);
         uint256 l1Fee = l1GasUsed * l1BaseFee();
-        uint256 divisor = 10**decimals;
+        uint256 divisor = 10**DECIMALS;
         uint256 unscaled = l1Fee * scalar();
         uint256 scaled = unscaled / divisor;
         return scaled;
@@ -136,6 +92,16 @@ contract GasPriceOracle is Semver {
      */
     function l1BaseFee() public view returns (uint256) {
         return L1Block(Predeploys.L1_BLOCK_ATTRIBUTES).basefee();
+    }
+
+    /**
+     * @custom:legacy
+     * @notice Retrieves the number of decimals used in the scalar.
+     *
+     * @return Number of decimals used in the scalar.
+     */
+    function decimals() public pure returns (uint256) {
+        return DECIMALS;
     }
 
     /**

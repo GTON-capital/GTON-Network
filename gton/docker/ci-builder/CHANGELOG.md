@@ -1,5 +1,33 @@
 # @eth-optimism/ci-builder
 
+## 0.4.0
+
+### Minor Changes
+
+- 05cc935b2: Bump foundry to 2ff99025abade470a795724c10648c800a41025e
+
+## 0.3.8
+
+### Patch Changes
+
+- 85dfa9fe2: Add echidna tests for encoding
+- ea0540e51: Update the slither version to fix echidna tests
+- 0f8fc58ad: Add echidna tests for Burn
+
+## 0.3.7
+
+### Patch Changes
+
+- 18d1ce3f4: Require rebuild on null ref
+- 1594678e0: Add echidna test for AliasHelper
+- 74fd040ce: Pin echidna version
+
+## 0.3.6
+
+### Patch Changes
+
+- 011acf411: Add echidna to ci-builder
+
 ## 0.3.5
 
 ### Patch Changes

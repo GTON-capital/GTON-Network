@@ -1,5 +1,70 @@
 # @eth-optimism/contracts-bedrock
 
+## 0.11.4
+
+### Patch Changes
+
+- 3c22333b8: Loosens the requirements for re-proving a withdrawal transaction in the `OptimismPortal`
+
+## 0.11.3
+
+### Patch Changes
+
+- 4964be480: Added a test for large deposit gaps
+
+## 0.11.2
+
+### Patch Changes
+
+- 8784bc0bc: Add invariant test for the L1 XDM's `relayMessage` minimum gas limits.
+
+## 0.11.1
+
+### Patch Changes
+
+- fe80a9488: Add echidna tests for portal
+- 827fc7b04: Adds a go package to generate fuzz inputs for the Bedrock contract tests.
+- a2166dcad: Add echidna tests for metering
+- ff09ec22d: Add echidna tests for hashing
+- 85dfa9fe2: Add echidna tests for encoding
+- 0f8fc58ad: Add echidna tests for Burn
+- 89f70c591: Add tests for the `Bytes` library
+- 03940c3cb: Make lint check and fix scripts match
+
+## 0.11.0
+
+### Minor Changes
+
+- 4d13f0afe: Refactors the MerkleTrie get function to throw explicitly instead of returning an existence boolean
+
+### Patch Changes
+
+- 43f33f39f: Add echidna test commands
+- 237a351f1: Add tests to the SystemConfig contract
+- 1d3c749a2: Bumps the version of ts-node used
+- 1594678e0: Add echidna test for AliasHelper
+- 1d3c749a2: Updates the version of TypeScript
+- 136ea1785: Refactors the L2OutputOracle to key the l2Outputs mapping by index instead of by L2 block number.
+- 7300a7ca7: Document test function naming convention and create a script for checking.
+- Updated dependencies [c975c9620]
+- Updated dependencies [136ea1785]
+  - @eth-optimism/core-utils@0.12.0
+
+## 0.10.0
+
+### Minor Changes
+
+- 59adcaa09: Deleted Unused Variables fundAccount , impersonatedTx
+- 1bfe79f20: Adds an implementation of the Two Step Withdrawals V2 proposal
+
+### Patch Changes
+
+- c025a1153: Fixes a severe vulnerability found in ToB's November 2022 audit of the Bedrock contracts
+- f8697a607: Removes historicalTotalBlocks from the L2OutputOracle
+- c71500a7e: Updates L2OutputOracle to easily delete multiple outputs at once
+- f49b71d50: Updated forge-std version
+- ccaf5bc83: Allows owner and proposer addresses to be the same in L2OutputOracle
+
 ## 0.9.1
 
 ### Patch Changes

@@ -1,5 +1,33 @@
 # @eth-optimism/indexer
 
+## 0.7.0
+
+### Minor Changes
+
+- ed50bd5b4: Bump indexer
+
+## 0.6.0
+
+### Minor Changes
+
+- ecf0cc59b: Fix startup issues, add L2 conf depth
+
+## 0.5.0
+
+### Minor Changes
+
+- f030d8660: Adds support for the OptimismPortal's new `WithdrawalProven` event to the indexer
+
+## 0.4.0
+
+### Minor Changes
+
+- 1bfe79f20: Adds an implementation of the Two Step Withdrawals V2 proposal
+
+### Patch Changes
+
+- f49b71d50: Updated forge-std version
+
 ## 0.3.3
 
 ### Patch Changes

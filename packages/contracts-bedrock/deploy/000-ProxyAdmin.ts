@@ -1,13 +1,11 @@
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 
-import {
-  assertContractVariable,
-  deployAndVerifyAndThen,
-} from '../src/deploy-utils'
+import { assertContractVariable, deploy } from '../src/deploy-utils'
 
 const deployFn: DeployFunction = async (hre) => {
   const { deployer } = await hre.getNamedAccounts()
-  await deployAndVerifyAndThen({
+
+  await deploy({
     hre,
     name: 'ProxyAdmin',
     args: [deployer],
@@ -19,6 +17,6 @@ const deployFn: DeployFunction = async (hre) => {
   })
 }
 
-deployFn.tags = ['ProxyAdmin', 'fresh', 'migration']
+deployFn.tags = ['ProxyAdmin', 'setup']
 
 export default deployFn

@@ -22,7 +22,7 @@ import (
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
-	bss "github.com/ethereum-optimism/optimism/op-batcher"
+	bss "github.com/ethereum-optimism/optimism/op-batcher/batcher"
 	"github.com/ethereum-optimism/optimism/op-bindings/predeploys"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils"
@@ -32,8 +32,9 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/p2p"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
+	"github.com/ethereum-optimism/optimism/op-node/sources"
 	"github.com/ethereum-optimism/optimism/op-node/testlog"
-	l2os "github.com/ethereum-optimism/optimism/op-proposer"
+	l2os "github.com/ethereum-optimism/optimism/op-proposer/proposer"
 	oplog "github.com/ethereum-optimism/optimism/op-service/log"
 )
 
@@ -62,9 +63,9 @@ func DefaultSystemConfig(t *testing.T) SystemConfig {
 		L2OutputOracleSubmissionInterval: 4,
 		L2OutputOracleStartingTimestamp:  -1,
 		L2OutputOracleProposer:           addresses.Proposer,
-		L2OutputOracleOwner:              common.Address{}, // tbd
+		L2OutputOracleChallenger:         common.Address{}, // tbd
 
-		SystemConfigOwner: addresses.SysCfgOwner,
+		FinalSystemOwner: addresses.SysCfgOwner,
 
 		L1BlockTime:                 2,
 		L1GenesisBlockNonce:         4660,
@@ -80,20 +81,20 @@ func DefaultSystemConfig(t *testing.T) SystemConfig {
 		L1GenesisBlockBaseFeePerGas: uint642big(7),
 
 		L2GenesisBlockNonce:         0,
-		L2GenesisBlockExtraData:     []byte{},
 		L2GenesisBlockGasLimit:      8_000_000,
 		L2GenesisBlockDifficulty:    uint642big(1),
 		L2GenesisBlockMixHash:       common.Hash{},
-		L2GenesisBlockCoinbase:      common.Address{0: 0x12},
 		L2GenesisBlockNumber:        0,
 		L2GenesisBlockGasUsed:       0,
 		L2GenesisBlockParentHash:    common.Hash{},
 		L2GenesisBlockBaseFeePerGas: uint642big(7),
 
-		L2CrossDomainMessengerOwner: common.Address{0: 0x52, 19: 0xf3}, // tbd
-
 		GasPriceOracleOverhead: 2100,
 		GasPriceOracleScalar:   1_000_000,
+
+		SequencerFeeVaultRecipient: common.Address{19: 1},
+		BaseFeeVaultRecipient:      common.Address{19: 2},
+		L1FeeVaultRecipient:        common.Address{19: 3},
 
 		DeploymentWaitConfirmations: 1,
 
@@ -146,6 +147,7 @@ func DefaultSystemConfig(t *testing.T) SystemConfig {
 			"batcher":   testlog.Logger(t, log.LvlInfo).New("role", "batcher"),
 			"proposer":  testlog.Logger(t, log.LvlCrit).New("role", "proposer"),
 		},
+		GethOptions:           map[string][]GethOption{},
 		P2PTopology:           nil, // no P2P connectivity by default
 		NonFinalizedProposals: false,
 	}
@@ -158,11 +160,6 @@ func writeDefaultJWT(t *testing.T) string {
 		t.Fatalf("failed to prepare jwt file for geth: %v", err)
 	}
 	return jwtPath
-}
-
-type L2OOContractConfig struct {
-	SubmissionFrequency   *big.Int
-	HistoricalTotalBlocks *big.Int
 }
 
 type DepositContractConfig struct {
@@ -182,6 +179,7 @@ type SystemConfig struct {
 	Premine        map[common.Address]*big.Int
 	Nodes          map[string]*rollupNode.Config // Per node config. Don't use populate rollup.Config
 	Loggers        map[string]log.Logger
+	GethOptions    map[string][]GethOption
 	ProposerLogger log.Logger
 	BatcherLogger  log.Logger
 
@@ -272,6 +270,21 @@ func (cfg SystemConfig) Start() (*System, error) {
 	if err != nil {
 		return nil, err
 	}
+	for addr, amount := range cfg.Premine {
+		if existing, ok := l2Genesis.Alloc[addr]; ok {
+			l2Genesis.Alloc[addr] = core.GenesisAccount{
+				Code:    existing.Code,
+				Storage: existing.Storage,
+				Balance: amount,
+				Nonce:   existing.Nonce,
+			}
+		} else {
+			l2Genesis.Alloc[addr] = core.GenesisAccount{
+				Balance: amount,
+				Nonce:   0,
+			}
+		}
+	}
 
 	makeRollupConfig := func() rollup.Config {
 		return rollup.Config{
@@ -293,7 +306,6 @@ func (cfg SystemConfig) Start() (*System, error) {
 			ChannelTimeout:         cfg.DeployConfig.ChannelTimeout,
 			L1ChainID:              cfg.L1ChainIDBig(),
 			L2ChainID:              cfg.L2ChainIDBig(),
-			P2PSequencerAddress:    cfg.DeployConfig.P2PSequencerAddress,
 			BatchInboxAddress:      cfg.DeployConfig.BatchInboxAddress,
 			DepositContractAddress: predeploys.DevOptimismPortalAddr,
 			L1SystemConfigAddress:  predeploys.DevSystemConfigAddr,
@@ -303,7 +315,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 	sys.RollupConfig = &defaultConfig
 
 	// Initialize nodes
-	l1Node, l1Backend, err := initL1Geth(&cfg, l1Genesis)
+	l1Node, l1Backend, err := initL1Geth(&cfg, l1Genesis, cfg.GethOptions["l1"]...)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +323,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 	sys.Backends["l1"] = l1Backend
 
 	for name := range cfg.Nodes {
-		node, backend, err := initL2Geth(name, big.NewInt(int64(cfg.DeployConfig.L2ChainID)), l2Genesis, cfg.JWTFilePath)
+		node, backend, err := initL2Geth(name, big.NewInt(int64(cfg.DeployConfig.L2ChainID)), l2Genesis, cfg.JWTFilePath, cfg.GethOptions[name]...)
 		if err != nil {
 			return nil, err
 		}
@@ -359,6 +371,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 		rollupCfg.L1 = &rollupNode.L1EndpointConfig{
 			L1NodeAddr: l1EndpointConfig,
 			L1TrustRPC: false,
+			L1RPCKind:  sources.RPCKindBasic,
 		}
 		rollupCfg.L2 = &rollupNode.L2EndpointConfig{
 			L2EngineAddr:      l2EndpointConfig,
@@ -450,7 +463,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 			c.P2P = p
 
 			if c.Driver.SequencerEnabled {
-				c.P2PSigner = &p2p.PreparedSigner{Signer: p2p.NewLocalSigner(cfg.Secrets.SequencerP2P)}
+				c.P2PSigner = &p2p.PreparedSigner{Signer: p2p.NewLegacyLocalSigner(cfg.Secrets.SequencerP2P)}
 			}
 		}
 
@@ -489,7 +502,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 	}
 
 	// L2Output Submitter
-	sys.L2OutputSubmitter, err = l2os.NewL2OutputSubmitter(l2os.Config{
+	sys.L2OutputSubmitter, err = l2os.NewL2OutputSubmitterFromCLIConfig(l2os.CLIConfig{
 		L1EthRpc:                  sys.Nodes["l1"].WSEndpoint(),
 		RollupRpc:                 sys.RollupNodes["sequencer"].HTTPEndpoint(),
 		L2OOAddress:               predeploys.DevL2OutputOracleAddr.String(),
@@ -503,7 +516,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 			Format: "text",
 		},
 		PrivateKey: hexPriv(cfg.Secrets.Proposer),
-	}, "", sys.cfg.Loggers["proposer"])
+	}, sys.cfg.Loggers["proposer"])
 	if err != nil {
 		return nil, fmt.Errorf("unable to setup l2 output submitter: %w", err)
 	}
@@ -513,13 +526,15 @@ func (cfg SystemConfig) Start() (*System, error) {
 	}
 
 	// Batch Submitter
-	sys.BatchSubmitter, err = bss.NewBatchSubmitter(bss.Config{
+	sys.BatchSubmitter, err = bss.NewBatchSubmitterFromCLIConfig(bss.CLIConfig{
 		L1EthRpc:                  sys.Nodes["l1"].WSEndpoint(),
 		L2EthRpc:                  sys.Nodes["sequencer"].WSEndpoint(),
 		RollupRpc:                 sys.RollupNodes["sequencer"].HTTPEndpoint(),
-		MinL1TxSize:               1,
-		MaxL1TxSize:               120000,
-		ChannelTimeout:            cfg.DeployConfig.ChannelTimeout,
+		MaxL1TxSize:               120_000,
+		TargetL1TxSize:            160, //624,
+		TargetNumFrames:           1,
+		ApproxComprRatio:          1.0,
+		SubSafetyMargin:           testSafetyMargin(cfg.DeployConfig),
 		PollInterval:              50 * time.Millisecond,
 		NumConfirmations:          1,
 		ResubmissionTimeout:       5 * time.Second,
@@ -528,8 +543,7 @@ func (cfg SystemConfig) Start() (*System, error) {
 			Level:  "info",
 			Format: "text",
 		},
-		PrivateKey:                 hexPriv(cfg.Secrets.Batcher),
-		SequencerBatchInboxAddress: cfg.DeployConfig.BatchInboxAddress.String(),
+		PrivateKey: hexPriv(cfg.Secrets.Batcher),
 	}, sys.cfg.Loggers["batcher"])
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup batch submitter: %w", err)
@@ -559,4 +573,25 @@ func uint642big(in uint64) *hexutil.Big {
 func hexPriv(in *ecdsa.PrivateKey) string {
 	b := e2eutils.EncodePrivKey(in)
 	return hexutil.Encode(b)
+}
+
+// returns a safety margin that heuristically leads to a short channel lifetime
+// of netChannelDuration. In current testing setups, we want channels to close
+// quickly to have a low latency. We don't optimize for gas consumption.
+func testSafetyMargin(cfg *genesis.DeployConfig) uint64 {
+	// target channel duration after first frame is included on L1
+	const netChannelDuration = 2
+	// The sequencing window timeout starts from the L1 origin, whereas the
+	// channel timeout starts from the first L1 inclusion block of any frame.
+	// So to have comparable values, the sws is converted to an effective
+	// sequencing window from the first L1 inclusion block, assuming that L2
+	// blocks are quickly included on L1.
+	// So we subtract 1 block distance from the origin block and 1 block for
+	// minging the first frame.
+	openChannelSeqWindow := cfg.SequencerWindowSize - 2
+	if openChannelSeqWindow > cfg.ChannelTimeout {
+		return cfg.ChannelTimeout - netChannelDuration
+	} else {
+		return openChannelSeqWindow - netChannelDuration
+	}
 }

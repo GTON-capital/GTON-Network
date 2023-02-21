@@ -72,7 +72,8 @@ func TestBatcher(gt *testing.T) {
 	log.Info("bl", "txs", len(bl.Transactions()))
 
 	// Now make enough L1 blocks that the verifier will have to derive a L2 block
-	for i := uint64(1); i < sd.RollupCfg.SeqWindowSize; i++ {
+	// It will also eagerly derive the block from the batcher
+	for i := uint64(0); i < sd.RollupCfg.SeqWindowSize; i++ {
 		miner.ActL1StartBlock(12)(t)
 		miner.ActL1EndBlock(t)
 	}
@@ -193,4 +194,131 @@ func TestL2Finalization(gt *testing.T) {
 	sequencer.ActL2PipelineFull(t)
 	require.Equal(t, uint64(3), sequencer.SyncStatus().FinalizedL1.Number)
 	require.Equal(t, heightToSubmit, sequencer.SyncStatus().FinalizedL2.Number, "unknown/bad finalized L1 blocks are ignored")
+}
+
+// TestGarbageBatch tests the behavior of an invalid/malformed output channel frame containing
+// valid batches being submitted to the batch inbox. These batches should always be rejected
+// and the safe L2 head should remain unaltered.
+func TestGarbageBatch(gt *testing.T) {
+	t := NewDefaultTesting(gt)
+	p := defaultRollupTestParams
+	dp := e2eutils.MakeDeployParams(t, p)
+	for _, garbageKind := range GarbageKinds {
+		sd := e2eutils.Setup(t, dp, defaultAlloc)
+		log := testlog.Logger(t, log.LvlError)
+		miner, engine, sequencer := setupSequencerTest(t, sd, log)
+
+		_, verifier := setupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg))
+
+		batcherCfg := &BatcherCfg{
+			MinL1TxSize: 0,
+			MaxL1TxSize: 128_000,
+			BatcherKey:  dp.Secrets.Batcher,
+		}
+
+		if garbageKind == MALFORM_RLP || garbageKind == INVALID_COMPRESSION {
+			// If the garbage kind is `INVALID_COMPRESSION` or `MALFORM_RLP`, use the `actions` packages
+			// modified `ChannelOut`.
+			batcherCfg.GarbageCfg = &GarbageChannelCfg{
+				useInvalidCompression: garbageKind == INVALID_COMPRESSION,
+				malformRLP:            garbageKind == MALFORM_RLP,
+			}
+		}
+
+		batcher := NewL2Batcher(log, sd.RollupCfg, batcherCfg, sequencer.RollupClient(), miner.EthClient(), engine.EthClient())
+
+		sequencer.ActL2PipelineFull(t)
+		verifier.ActL2PipelineFull(t)
+
+		syncAndBuildL2 := func() {
+			// Send a head signal to the sequencer and verifier
+			sequencer.ActL1HeadSignal(t)
+			verifier.ActL1HeadSignal(t)
+
+			// Run the derivation pipeline on the sequencer and verifier
+			sequencer.ActL2PipelineFull(t)
+			verifier.ActL2PipelineFull(t)
+
+			// Build the L2 chain to the L1 head
+			sequencer.ActBuildToL1Head(t)
+		}
+
+		// Build an empty block on L1 and run the derivation pipeline + build L2
+		// to the L1 head (block #1)
+		miner.ActEmptyBlock(t)
+		syncAndBuildL2()
+
+		// Ensure that the L2 safe head has an L1 Origin at genesis before any
+		// batches are submitted.
+		require.Equal(t, uint64(0), sequencer.L2Safe().L1Origin.Number)
+		require.Equal(t, uint64(1), sequencer.L2Unsafe().L1Origin.Number)
+
+		// Submit a batch containing all blocks built on L2 while catching up
+		// to the L1 head above. The output channel frame submitted to the batch
+		// inbox will be invalid- it will be malformed depending on the passed
+		// `garbageKind`.
+		batcher.ActBufferAll(t)
+		batcher.ActL2ChannelClose(t)
+		batcher.ActL2BatchSubmitGarbage(t, garbageKind)
+
+		// Include the batch on L1 in block #2
+		miner.ActL1StartBlock(12)(t)
+		miner.ActL1IncludeTx(dp.Addresses.Batcher)(t)
+		miner.ActL1EndBlock(t)
+
+		// Send a head signal + run the derivation pipeline on the sequencer
+		// and verifier.
+		syncAndBuildL2()
+
+		// Verify that the L2 blocks that were batch submitted were *not* marked
+		// as safe due to the malformed output channel frame. The safe head should
+		// still have an L1 Origin at genesis.
+		require.Equal(t, uint64(0), sequencer.L2Safe().L1Origin.Number)
+		require.Equal(t, uint64(2), sequencer.L2Unsafe().L1Origin.Number)
+	}
+}
+
+func TestExtendedTimeWithoutL1Batches(gt *testing.T) {
+	t := NewDefaultTesting(gt)
+	p := &e2eutils.TestParams{
+		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
+		SequencerWindowSize: 24,
+		ChannelTimeout:      20,
+	}
+	dp := e2eutils.MakeDeployParams(t, p)
+	sd := e2eutils.Setup(t, dp, defaultAlloc)
+	log := testlog.Logger(t, log.LvlError)
+	miner, engine, sequencer := setupSequencerTest(t, sd, log)
+
+	_, verifier := setupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg))
+
+	batcher := NewL2Batcher(log, sd.RollupCfg, &BatcherCfg{
+		MinL1TxSize: 0,
+		MaxL1TxSize: 128_000,
+		BatcherKey:  dp.Secrets.Batcher,
+	}, sequencer.RollupClient(), miner.EthClient(), engine.EthClient())
+
+	sequencer.ActL2PipelineFull(t)
+	verifier.ActL2PipelineFull(t)
+
+	// make a long L1 chain, up to just one block left for L2 blocks to be included.
+	for i := uint64(0); i < p.SequencerWindowSize-1; i++ {
+		miner.ActEmptyBlock(t)
+	}
+
+	// Now build a L2 chain that references all of these L1 blocks
+	sequencer.ActL1HeadSignal(t)
+	sequencer.ActBuildToL1Head(t)
+
+	// Now submit all the L2 blocks in the very last L1 block within sequencer window range
+	batcher.ActSubmitAll(t)
+	miner.ActL1StartBlock(12)(t)
+	miner.ActL1IncludeTx(dp.Addresses.Batcher)(t)
+	miner.ActL1EndBlock(t)
+
+	// Now sync the verifier, and see if the L2 chain of the sequencer is safe
+	verifier.ActL2PipelineFull(t)
+	require.Equal(t, sequencer.L2Unsafe(), verifier.L2Safe(), "all L2 blocks should have been included just in time")
+	sequencer.ActL2PipelineFull(t)
+	require.Equal(t, sequencer.L2Unsafe(), sequencer.L2Safe(), "same for sequencer")
 }

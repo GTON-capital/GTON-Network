@@ -1,5 +1,94 @@
 # @eth-optimism/sdk
 
+## 1.10.2
+
+### Patch Changes
+
+- 5372c9f5b: Remove assert node builtin from sdk
+- Updated dependencies [3c22333b8]
+  - @eth-optimism/contracts-bedrock@0.11.4
+
+## 1.10.1
+
+### Patch Changes
+
+- Updated dependencies [4964be480]
+  - @eth-optimism/contracts-bedrock@0.11.3
+
+## 1.10.0
+
+### Minor Changes
+
+- 3f4b3c328: Add in goerli bedrock addresses
+
+## 1.9.1
+
+### Patch Changes
+
+- Updated dependencies [8784bc0bc]
+  - @eth-optimism/contracts-bedrock@0.11.2
+
+## 1.9.0
+
+### Minor Changes
+
+- d1f9098f9: Removes support for Kovan
+
+### Patch Changes
+
+- ba8b94a60: Don't pass 0 gasLimit for migrated withdrawals
+- Updated dependencies [fe80a9488]
+- Updated dependencies [827fc7b04]
+- Updated dependencies [a2166dcad]
+- Updated dependencies [ff09ec22d]
+- Updated dependencies [85dfa9fe2]
+- Updated dependencies [d1f9098f9]
+- Updated dependencies [0f8fc58ad]
+- Updated dependencies [89f70c591]
+- Updated dependencies [03940c3cb]
+  - @eth-optimism/contracts-bedrock@0.11.1
+  - @eth-optimism/contracts@0.5.40
+
+## 1.8.0
+
+### Minor Changes
+
+- c975c9620: Add suppory for finalizing legacy withdrawals after the Bedrock migration
+
+### Patch Changes
+
+- 767585b07: Removes an unused variable from the SDK
+- 136ea1785: Refactors the L2OutputOracle to key the l2Outputs mapping by index instead of by L2 block number.
+- Updated dependencies [43f33f39f]
+- Updated dependencies [237a351f1]
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [c975c9620]
+- Updated dependencies [1594678e0]
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [136ea1785]
+- Updated dependencies [4d13f0afe]
+- Updated dependencies [7300a7ca7]
+  - @eth-optimism/contracts-bedrock@0.11.0
+  - @eth-optimism/contracts@0.5.39
+  - @eth-optimism/core-utils@0.12.0
+
+## 1.7.0
+
+### Minor Changes
+
+- 1bfe79f20: Adds an implementation of the Two Step Withdrawals V2 proposal
+
+### Patch Changes
+
+- Updated dependencies [c025a1153]
+- Updated dependencies [f8697a607]
+- Updated dependencies [59adcaa09]
+- Updated dependencies [c71500a7e]
+- Updated dependencies [f49b71d50]
+- Updated dependencies [1bfe79f20]
+- Updated dependencies [ccaf5bc83]
+  - @eth-optimism/contracts-bedrock@0.10.0
+
 ## 1.6.11
 
 ### Patch Changes
@@ -386,8 +475,7 @@
 
 ### Patch Changes
 
-- 44420939: 1. Fix a bug in `L2Provider.getL1GasPrice()`
-  2. Make it easier to get correct estimates from `L2Provider.estimateL1Gas()` and `L2.estimateL2GasCost`.
+- 44420939: 1. Fix a bug in `L2Provider.getL1GasPrice()` 2. Make it easier to get correct estimates from `L2Provider.estimateL1Gas()` and `L2.estimateL2GasCost`.
 
 ## 0.2.3
 

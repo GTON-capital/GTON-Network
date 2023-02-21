@@ -4,7 +4,7 @@ pragma solidity 0.8.15;
 import { CommonTest, Portal_Initializer } from "./CommonTest.t.sol";
 import { CrossDomainOwnable } from "../L2/CrossDomainOwnable.sol";
 import { AddressAliasHelper } from "../vendor/AddressAliasHelper.sol";
-import { Vm } from "forge-std/Vm.sol";
+import { Vm, VmSafe } from "forge-std/Vm.sol";
 import { Bytes32AddressLib } from "@rari-capital/solmate/src/utils/Bytes32AddressLib.sol";
 
 contract XDomainSetter is CrossDomainOwnable {
@@ -23,13 +23,13 @@ contract CrossDomainOwnable_Test is CommonTest {
     }
 
     // Check that the revert message is correct
-    function test_revertOnlyOwner() external {
+    function test_onlyOwner_notOwner_reverts() external {
         vm.expectRevert("CrossDomainOwnable: caller is not the owner");
         setter.set(1);
     }
 
     // Check that making a call can set the value properly
-    function test_onlyOwner() external {
+    function test_onlyOwner_succeeds() external {
         assertEq(setter.value(), 0);
 
         vm.prank(AddressAliasHelper.applyL1ToL2Alias(setter.owner()));
@@ -48,7 +48,7 @@ contract CrossDomainOwnableThroughPortal_Test is Portal_Initializer {
         setter = new XDomainSetter();
     }
 
-    function test_depositTransaction_crossDomainOwner() external {
+    function test_depositTransaction_crossDomainOwner_succeeds() external {
         vm.recordLogs();
 
         vm.prank(alice);
@@ -62,11 +62,11 @@ contract CrossDomainOwnableThroughPortal_Test is Portal_Initializer {
 
         // Simulate the operation of the `op-node` by parsing data
         // from logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
+        VmSafe.Log[] memory logs = vm.getRecordedLogs();
         // Only 1 log emitted
         assertEq(logs.length, 1);
 
-        Vm.Log memory log = logs[0];
+        VmSafe.Log memory log = logs[0];
 
         // It is the expected topic
         bytes32 topic = log.topics[0];

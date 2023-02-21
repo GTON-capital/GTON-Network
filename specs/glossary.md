@@ -205,7 +205,7 @@ roots][l2-output] to L1.
 
 A sequencing window is a range of L1 blocks from which a [sequencing epoch][sequencing-epoch] can be derived.
 
-A sequencing window whose first L1 block has number `N` contains [batcher transactions][batcher-transactions] for epoch
+A sequencing window whose first L1 block has number `N` contains [batcher transactions][batcher-transaction] for epoch
 `N`. The window contains blocks `[N, N + SWS)` where `SWS` is the sequencer window size.
 
 > **TODO** specify sequencer window size
@@ -336,7 +336,7 @@ See the [corresponding section][spec-deposit-tx-type] of the deposits spec for m
 
 [deposit-contract]: glossary.md#deposit-contract
 
-The *deposit contract* is qn [L1] contract to which [EOAs][EOA] and contracts may send [deposits]. The deposits are
+The *deposit contract* is an [L1] contract to which [EOAs][EOA] and contracts may send [deposits]. The deposits are
 emitted as log records (in Solidity, these are called *events*) for consumption by [rollup nodes][rollup-node].
 
 Advanced note: the deposits are not stored in calldata because they can be sent by contracts, in which case the calldata
@@ -394,7 +394,7 @@ Data availability is the guarantee that some data will be "available" (i.e. *ret
 window. In Optimism's case, the data in question are [sequencer batches][sequencer-batch] that [validators][validator]
 needs in order to verify the sequencer's work and validate the L2 chain.
 
-The [finalization period][finalization-period] should be taken as the lower bound on such the availability window, since
+The [finalization period][finalization-period] should be taken as the lower bound on the availability window, since
 that is when data availability is the most crucial, as it is needed to perform a [fault proof][fault-proof].
 
 "Availability" **does not** mean guaranteed long-term storage of the data.
@@ -406,7 +406,7 @@ that is when data availability is the most crucial, as it is needed to perform a
 A data availability provider is a service that can be used to make data available. See the [Data
 Availability][data-availability] for more information on what this means.
 
-Ideally, a good data availability provider such provide strong *verifiable* guarantees of data availability
+Ideally, a good data availability provider provides strong *verifiable* guarantees of data availability
 
 Currently, the only supported data availability provider is Ethereum call data. [Ethereum data blobs][eip4844] will be
 supported when they get deployed on Ethereum.
@@ -436,7 +436,7 @@ transactions][batcher-transaction]. The reason to split a channel into frames is
 include in a single batcher transaction.
 
 A channel is uniquely identified by its timestamp (UNIX time at which the channel was created) and a random value. See
-the [Frame Format][frame-format] section of the L2 Chain Derivation specifictaion for more information.
+the [Frame Format][frame-format] section of the L2 Chain Derivation specification for more information.
 
 [frame-format]: derivation.md#frame-format
 
@@ -479,7 +479,7 @@ transaction must also be signed by a recognized batch submitter account.
 
 [channel-timeout]: glossary.md#channel-timeout
 
-The channel timeout is a duration (in seconds) during which [channel frames][channel-frame may land on L1 within
+The channel timeout is a duration (in L1 blocks) during which [channel frames][channel-frame] may land on L1 within
 [batcher transactions][batcher-transaction].
 
 The acceptable time range for the frames of a [channel][channel] is `[channel_id.timestamp, channel_id.timestamp +
@@ -694,7 +694,7 @@ cf. [L1 Attributes Predeployed Contract Specification](deposits.md#l1-attributes
 
 ## L2 Output Root
 
-[l2-output]: glossary.md#l2-output
+[l2-output]: glossary.md#l2-output-root
 
 A 32 byte value which serves as a commitment to the current state of the L2 chain.
 
@@ -798,7 +798,7 @@ In these specifications, "execution engine" always refer to the L2 execution eng
 [Solidity events]: https://docs.soliditylang.org/en/latest/contracts.html?highlight=events#events
 [nano-header]: https://github.com/norswap/nanoeth/blob/cc5d94a349c90627024f3cd629a2d830008fec72/src/com/norswap/nanoeth/blocks/BlockHeader.java#L22-L156
 [yellow]: https://ethereum.github.io/yellowpaper/paper.pdf
-[engine-api]: https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#PayloadAttributesV1
+[engine-api]: https://github.com/ethereum/execution-apis/blob/main/src/engine/paris.md#PayloadAttributesV1
 [merge]: https://ethereum.org/en/eth2/merge/
 [mempool]: https://www.quicknode.com/guides/defi/how-to-access-ethereum-mempool
 [L1 consensus layer]: https://github.com/ethereum/consensus-specs/#readme

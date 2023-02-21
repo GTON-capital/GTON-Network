@@ -2,7 +2,8 @@
 pragma solidity 0.8.15;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC165, ILegacyMintableERC20, IOptimismMintableERC20 } from "./SupportedInterfaces.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { ILegacyMintableERC20, IOptimismMintableERC20 } from "./IOptimismMintableERC20.sol";
 
 /**
  * @title OptimismMintableERC20
@@ -16,12 +17,12 @@ contract OptimismMintableERC20 is IOptimismMintableERC20, ILegacyMintableERC20, 
     /**
      * @notice Address of the corresponding version of this token on the remote chain.
      */
-    address public remoteToken;
+    address public immutable REMOTE_TOKEN;
 
     /**
      * @notice Address of the StandardBridge on this network.
      */
-    address public bridge;
+    address public immutable BRIDGE;
 
     /**
      * @notice Emitted whenever tokens are minted for an account.
@@ -43,7 +44,7 @@ contract OptimismMintableERC20 is IOptimismMintableERC20, ILegacyMintableERC20, 
      * @notice A modifier that only allows the bridge to call
      */
     modifier onlyBridge() {
-        require(msg.sender == bridge, "OptimismMintableERC20: only bridge can mint and burn");
+        require(msg.sender == BRIDGE, "OptimismMintableERC20: only bridge can mint and burn");
         _;
     }
 
@@ -59,8 +60,8 @@ contract OptimismMintableERC20 is IOptimismMintableERC20, ILegacyMintableERC20, 
         string memory _name,
         string memory _symbol
     ) ERC20(_name, _symbol) {
-        remoteToken = _remoteToken;
-        bridge = _bridge;
+        REMOTE_TOKEN = _remoteToken;
+        BRIDGE = _bridge;
     }
 
     /**
@@ -113,17 +114,33 @@ contract OptimismMintableERC20 is IOptimismMintableERC20, ILegacyMintableERC20, 
 
     /**
      * @custom:legacy
-     * @notice Legacy getter for the remote token. Use remoteToken going forward.
+     * @notice Legacy getter for the remote token. Use REMOTE_TOKEN going forward.
      */
     function l1Token() public view returns (address) {
-        return remoteToken;
+        return REMOTE_TOKEN;
     }
 
     /**
      * @custom:legacy
-     * @notice Legacy getter for the bridge. Use bridge going forward.
+     * @notice Legacy getter for the bridge. Use BRIDGE going forward.
      */
     function l2Bridge() public view returns (address) {
-        return bridge;
+        return BRIDGE;
+    }
+
+    /**
+     * @custom:legacy
+     * @notice Legacy getter for REMOTE_TOKEN.
+     */
+    function remoteToken() public view returns (address) {
+        return REMOTE_TOKEN;
+    }
+
+    /**
+     * @custom:legacy
+     * @notice Legacy getter for BRIDGE.
+     */
+    function bridge() public view returns (address) {
+        return BRIDGE;
     }
 }

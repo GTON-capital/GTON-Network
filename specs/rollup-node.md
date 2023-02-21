@@ -55,8 +55,8 @@ For a complete specification of the L2 block derivation, refer to the [L2 block 
 
 ## L2 Output RPC method
 
-The Rollup node has its own RPC method, `optimism_outputAtBlock` which returns the
-a 32 byte hash corresponding to the [L2 output root](./proposals.md#l2-output-commitment-construction).
+The Rollup node has its own RPC method, `optimism_outputAtBlock` which returns a 32
+byte hash corresponding to the [L2 output root](./proposals.md#l2-output-commitment-construction).
 
 [SSZ]: https://github.com/ethereum/consensus-specs/blob/dev/ssz/simple-serialize.md
 
@@ -64,7 +64,7 @@ a 32 byte hash corresponding to the [L2 output root](./proposals.md#l2-output-co
 
 The input and return types here are as defined by the [engine API specs][engine-structures]).
 
-[engine-structures]: https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#structures
+[engine-structures]: https://github.com/ethereum/execution-apis/blob/main/src/engine/paris.md#structures
 
 - method: `optimism_outputAtBlock`
 - params:
@@ -72,4 +72,4 @@ The input and return types here are as defined by the [engine API specs][engine-
         OR `String` - one of `"safe"`, `"latest"`, or `"pending"`.
 - returns:
   1. `version`: `DATA`, 32 Bytes - the output root version number, beginning with 0.
-  1. `l2OutputRoot`: `DATA`, 32 Bytes - the output root
+  1. `l2OutputRoot`: `DATA`, 32 Bytes - the output root.

@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum-optimism/optimism/op-bindings/bindings"
 	"github.com/ethereum-optimism/optimism/op-bindings/predeploys"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -16,7 +18,7 @@ import (
 type LegacyWithdrawal struct {
 	Target *common.Address `json:"target"`
 	Sender *common.Address `json:"sender"`
-	Data   []byte          `json:"data"`
+	Data   hexutil.Bytes   `json:"data"`
 	Nonce  *big.Int        `json:"nonce"`
 }
 
@@ -37,9 +39,9 @@ func NewLegacyWithdrawal(target, sender *common.Address, data []byte, nonce *big
 // through the standard optimism cross domain messaging system by hashing in
 // the L2CrossDomainMessenger address.
 func (w *LegacyWithdrawal) Encode() ([]byte, error) {
-	enc, err := EncodeCrossDomainMessageV0(w.Target, w.Sender, w.Data, w.Nonce)
+	enc, err := EncodeCrossDomainMessageV0(w.Target, w.Sender, []byte(w.Data), w.Nonce)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot encode LegacyWithdrawal: %w", err)
 	}
 
 	out := make([]byte, len(enc)+len(predeploys.L2CrossDomainMessengerAddr.Bytes()))
@@ -97,7 +99,7 @@ func (w *LegacyWithdrawal) Decode(data []byte) error {
 
 	w.Target = &target
 	w.Sender = &sender
-	w.Data = msgData
+	w.Data = hexutil.Bytes(msgData)
 	w.Nonce = nonce
 	return nil
 }
@@ -107,7 +109,7 @@ func (w *LegacyWithdrawal) Decode(data []byte) error {
 func (w *LegacyWithdrawal) Hash() (common.Hash, error) {
 	encoded, err := w.Encode()
 	if err != nil {
-		return common.Hash{}, nil
+		return common.Hash{}, fmt.Errorf("cannot hash LegacyWithdrawal: %w", err)
 	}
 	hash := crypto.Keccak256(encoded)
 	return common.BytesToHash(hash), nil
@@ -118,11 +120,68 @@ func (w *LegacyWithdrawal) Hash() (common.Hash, error) {
 func (w *LegacyWithdrawal) StorageSlot() (common.Hash, error) {
 	hash, err := w.Hash()
 	if err != nil {
-		return common.Hash{}, err
+		return common.Hash{}, fmt.Errorf("cannot compute storage slot: %w", err)
 	}
 	preimage := make([]byte, 64)
 	copy(preimage, hash.Bytes())
 
 	slot := crypto.Keccak256(preimage)
 	return common.BytesToHash(slot), nil
+}
+
+// Value returns the ETH value associated with the withdrawal. Since
+// ETH was represented as an ERC20 token before the Bedrock upgrade,
+// the sender and calldata must be observed and the value must be parsed
+// out if "finalizeETHWithdrawal" is the method.
+func (w *LegacyWithdrawal) Value() (*big.Int, error) {
+	abi, err := bindings.L1StandardBridgeMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	value := new(big.Int)
+
+	// Parse the 4byte selector
+	method, err := abi.MethodById(w.Data)
+	// If it is an unknown selector, there is no value
+	if err != nil {
+		return value, nil
+	}
+
+	if w.Sender == nil {
+		return nil, errors.New("sender is nil")
+	}
+
+	isFromL2StandardBridge := *w.Sender == predeploys.L2StandardBridgeAddr
+	if isFromL2StandardBridge && method.Name == "finalizeETHWithdrawal" {
+		data, err := method.Inputs.Unpack(w.Data[4:])
+		if err != nil {
+			return nil, err
+		}
+		// bounds check
+		if len(data) < 3 {
+			return nil, errors.New("not enough data")
+		}
+		var ok bool
+		value, ok = data[2].(*big.Int)
+		if !ok {
+			return nil, errors.New("not big.Int")
+		}
+	}
+
+	return value, nil
+}
+
+// CrossDomainMessage turns the LegacyWithdrawal into
+// a CrossDomainMessage. LegacyWithdrawals do not have
+// the concept of value or gaslimit, so set them to 0.
+func (w *LegacyWithdrawal) CrossDomainMessage() *CrossDomainMessage {
+	return &CrossDomainMessage{
+		Nonce:    w.Nonce,
+		Sender:   w.Sender,
+		Target:   w.Target,
+		Value:    new(big.Int),
+		GasLimit: new(big.Int),
+		Data:     []byte(w.Data),
+	}
 }

@@ -1,5 +1,60 @@
 # @eth-optimism/fault-detector
 
+## 0.6.0
+
+### Minor Changes
+
+- b004d1ad4: Updates the fault detector to support Bedrock networks.
+
+### Patch Changes
+
+- Updated dependencies [0e179781b]
+- Updated dependencies [5372c9f5b]
+- Updated dependencies [4ae94b412]
+  - @eth-optimism/common-ts@0.8.0
+  - @eth-optimism/sdk@1.10.2
+
+## 0.5.0
+
+### Minor Changes
+
+- 9b2891852: Refactors BaseServiceV2 slightly, merges standard options with regular options
+
+### Patch Changes
+
+- ab8ec365c: Updates BaseServiceV2 so that options are secret by default. Services will have to explicitly mark options as "public" for those options to be logged and included in the metadata metric.
+- c6c9c7dbf: Fault detector will now wait for providers to be connected
+- Updated dependencies [e23f60f63]
+- Updated dependencies [ab8ec365c]
+- Updated dependencies [ba8b94a60]
+- Updated dependencies [9b2891852]
+- Updated dependencies [d1f9098f9]
+- Updated dependencies [c6c9c7dbf]
+- Updated dependencies [ffcee1013]
+- Updated dependencies [eceb0de1d]
+  - @eth-optimism/common-ts@0.7.0
+  - @eth-optimism/sdk@1.9.0
+  - @eth-optimism/contracts@0.5.40
+
+## 0.4.0
+
+### Minor Changes
+
+- ab5c1b897: Includes a new event caching mechanism for running the fault detector against Geth.
+
+### Patch Changes
+
+- 1d3c749a2: Bumps the version of ts-node used
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [767585b07]
+- Updated dependencies [c975c9620]
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [136ea1785]
+  - @eth-optimism/contracts@0.5.39
+  - @eth-optimism/sdk@1.8.0
+  - @eth-optimism/core-utils@0.12.0
+  - @eth-optimism/common-ts@0.6.8
+
 ## 0.3.2
 
 ### Patch Changes

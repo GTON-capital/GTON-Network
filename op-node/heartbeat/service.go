@@ -1,3 +1,4 @@
+// Package heartbeat provides a service for sending heartbeats to a server.
 package heartbeat
 
 import (
@@ -11,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-var SendInterval = 10 * time.Minute
+// SendInterval determines the delay between requests. This must be larger than the MinHeartbeatInterval in the server.
+const SendInterval = 10 * time.Minute
 
 type Payload struct {
 	Version string `json:"version"`
@@ -21,6 +23,8 @@ type Payload struct {
 	ChainID uint64 `json:"chainID"`
 }
 
+// Beat sends a heartbeat to the server at the given URL. It will send a heartbeat immediately, and then every SendInterval.
+// Beat spawns a goroutine that will send heartbeats until the context is canceled.
 func Beat(
 	ctx context.Context,
 	log log.Logger,
@@ -38,6 +42,7 @@ func Beat(
 
 	send := func() {
 		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(payloadJSON))
+		req.Header.Set("User-Agent", fmt.Sprintf("op-node/%s", payload.Version))
 		req.Header.Set("Content-Type", "application/json")
 		if err != nil {
 			log.Error("error creating heartbeat HTTP request", "err", err)

@@ -1,5 +1,70 @@
 # @eth-optimism/message-relayer
 
+## 0.5.28
+
+### Patch Changes
+
+- Updated dependencies [0e179781b]
+- Updated dependencies [5372c9f5b]
+- Updated dependencies [4ae94b412]
+  - @eth-optimism/common-ts@0.8.0
+  - @eth-optimism/sdk@1.10.2
+
+## 0.5.27
+
+### Patch Changes
+
+- Updated dependencies [f04e5db2d]
+  - @eth-optimism/common-ts@0.7.1
+  - @eth-optimism/sdk@1.10.1
+
+## 0.5.26
+
+### Patch Changes
+
+- Updated dependencies [3f4b3c328]
+  - @eth-optimism/sdk@1.10.0
+
+## 0.5.25
+
+### Patch Changes
+
+- @eth-optimism/sdk@1.9.1
+
+## 0.5.24
+
+### Patch Changes
+
+- Updated dependencies [e23f60f63]
+- Updated dependencies [ab8ec365c]
+- Updated dependencies [ba8b94a60]
+- Updated dependencies [9b2891852]
+- Updated dependencies [d1f9098f9]
+- Updated dependencies [c6c9c7dbf]
+- Updated dependencies [ffcee1013]
+- Updated dependencies [eceb0de1d]
+  - @eth-optimism/common-ts@0.7.0
+  - @eth-optimism/sdk@1.9.0
+
+## 0.5.23
+
+### Patch Changes
+
+- 1d3c749a2: Bumps the version of ts-node used
+- Updated dependencies [767585b07]
+- Updated dependencies [c975c9620]
+- Updated dependencies [136ea1785]
+  - @eth-optimism/sdk@1.8.0
+  - @eth-optimism/core-utils@0.12.0
+  - @eth-optimism/common-ts@0.6.8
+
+## 0.5.22
+
+### Patch Changes
+
+- Updated dependencies [1bfe79f20]
+  - @eth-optimism/sdk@1.7.0
+
 ## 0.5.21
 
 ### Patch Changes

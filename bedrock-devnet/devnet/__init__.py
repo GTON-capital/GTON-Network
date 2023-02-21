@@ -61,7 +61,7 @@ def main():
         addresses = read_json(addresses_json_path)
     else:
         log.info('Deploying contracts.')
-        run_command(['yarn', 'hardhat', '--network', 'devnetL1', 'deploy', '--tags', 'fresh'], env={
+        run_command(['yarn', 'hardhat', '--network', 'devnetL1', 'deploy'], env={
             'CHAIN_ID': '900',
             'L1_RPC': 'http://localhost:8545',
             'PRIVATE_KEY_DEPLOYER': 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
@@ -80,8 +80,8 @@ def main():
             'CanonicalTransactionChain': '0x0000000000000000000000000000000000000000',
             'BondManager': '0x0000000000000000000000000000000000000000',
         })
-        sdk_addresses['L1CrossDomainMessenger'] = addresses['L1CrossDomainMessengerProxy']
-        sdk_addresses['L1StandardBridge'] = addresses['L1StandardBridgeProxy']
+        sdk_addresses['L1CrossDomainMessenger'] = addresses['Proxy__OVM_L1CrossDomainMessenger']
+        sdk_addresses['L1StandardBridge'] = addresses['Proxy__OVM_L1StandardBridge']
         sdk_addresses['OptimismPortal'] = addresses['OptimismPortalProxy']
         sdk_addresses['L2OutputOracle'] = addresses['L2OutputOracleProxy']
         write_json(addresses_json_path, addresses)
@@ -115,7 +115,6 @@ def main():
     run_command(['docker-compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher'], cwd=ops_bedrock_dir, env={
         'PWD': ops_bedrock_dir,
         'L2OO_ADDRESS': addresses['L2OutputOracleProxy'],
-        'SEQUENCER_GENESIS_HASH': rollup_config['genesis']['l2']['hash'],
         'SEQUENCER_BATCH_INBOX_ADDRESS': rollup_config['batch_inbox_address']
     })
 

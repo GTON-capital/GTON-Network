@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/log"
+
 	"github.com/ethereum-optimism/optimism/op-node/client"
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/sources/caching"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 type L1ClientConfig struct {
@@ -20,7 +21,7 @@ type L1ClientConfig struct {
 	L1BlockRefsCacheSize int
 }
 
-func L1ClientDefaultConfig(config *rollup.Config, trustRPC bool) *L1ClientConfig {
+func L1ClientDefaultConfig(config *rollup.Config, trustRPC bool, kind RPCProviderKind) *L1ClientConfig {
 	// Cache 3/2 worth of sequencing window of receipts and txs
 	span := int(config.SeqWindowSize) * 3 / 2
 	if span > 1000 { // sanity cap. If a large sequencing window is configured, do not make the cache too large
@@ -37,6 +38,7 @@ func L1ClientDefaultConfig(config *rollup.Config, trustRPC bool) *L1ClientConfig
 			MaxConcurrentRequests: 10,
 			TrustRPC:              trustRPC,
 			MustBePostMerge:       false,
+			RPCProviderKind:       kind,
 		},
 		L1BlockRefsCacheSize: span,
 	}
@@ -66,6 +68,8 @@ func NewL1Client(client client.RPC, log log.Logger, metrics caching.Metrics, con
 	}, nil
 }
 
+// L1BlockRefByLabel returns the [eth.L1BlockRef] for the given block label.
+// Notice, we cannot cache a block reference by label because labels are not guaranteed to be unique.
 func (s *L1Client) L1BlockRefByLabel(ctx context.Context, label eth.BlockLabel) (eth.L1BlockRef, error) {
 	info, err := s.InfoByLabel(ctx, label)
 	if err != nil {
@@ -81,6 +85,8 @@ func (s *L1Client) L1BlockRefByLabel(ctx context.Context, label eth.BlockLabel) 
 	return ref, nil
 }
 
+// L1BlockRefByNumber returns an [eth.L1BlockRef] for the given block number.
+// Notice, we cannot cache a block reference by number because L1 re-orgs can invalidate the cached block reference.
 func (s *L1Client) L1BlockRefByNumber(ctx context.Context, num uint64) (eth.L1BlockRef, error) {
 	info, err := s.InfoByNumber(ctx, num)
 	if err != nil {
@@ -91,6 +97,8 @@ func (s *L1Client) L1BlockRefByNumber(ctx context.Context, num uint64) (eth.L1Bl
 	return ref, nil
 }
 
+// L1BlockRefByHash returns the [eth.L1BlockRef] for the given block hash.
+// We cache the block reference by hash as it is safe to assume collision will not occur.
 func (s *L1Client) L1BlockRefByHash(ctx context.Context, hash common.Hash) (eth.L1BlockRef, error) {
 	if v, ok := s.l1BlockRefsCache.Get(hash); ok {
 		return v.(eth.L1BlockRef), nil

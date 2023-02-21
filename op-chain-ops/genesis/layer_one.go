@@ -77,14 +77,15 @@ func BuildL1DeveloperGenesis(config *DeployConfig) (*core.Genesis, error) {
 	}
 	data, err := sysCfgABI.Pack(
 		"initialize",
-		config.SystemConfigOwner,
+		config.FinalSystemOwner,
 		uint642Big(config.GasPriceOracleOverhead),
 		uint642Big(config.GasPriceOracleScalar),
 		config.BatchSenderAddress.Hash(),
 		gasLimit,
+		config.P2PSequencerAddress,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot abi encode initialize for SystemConfig: %w", err)
 	}
 	if _, err := upgradeProxy(
 		backend,
@@ -102,12 +103,11 @@ func BuildL1DeveloperGenesis(config *DeployConfig) (*core.Genesis, error) {
 	}
 	data, err = l2ooABI.Pack(
 		"initialize",
-		config.L2OutputOracleGenesisL2Output,
-		config.L2OutputOracleProposer,
-		config.L2OutputOracleOwner,
+		big.NewInt(0),
+		uint642Big(uint64(config.L1GenesisBlockTimestamp)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot abi encode initialize for L2OutputOracle: %w", err)
 	}
 	if _, err := upgradeProxy(
 		backend,
@@ -125,7 +125,7 @@ func BuildL1DeveloperGenesis(config *DeployConfig) (*core.Genesis, error) {
 	}
 	data, err = portalABI.Pack("initialize")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot abi encode initialize for OptimismPortal: %w", err)
 	}
 	if _, err := upgradeProxy(
 		backend,
@@ -142,10 +142,10 @@ func BuildL1DeveloperGenesis(config *DeployConfig) (*core.Genesis, error) {
 	}
 	data, err = l1XDMABI.Pack(
 		"initialize",
-		config.ProxyAdminOwner,
+		config.FinalSystemOwner,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot abi encode initialize for L1CrossDomainMessenger: %w", err)
 	}
 	if _, err := upgradeProxy(
 		backend,
@@ -264,24 +264,23 @@ func deployL1Contracts(config *DeployConfig, backend *backends.SimulatedBackend)
 		{
 			Name: "SystemConfig",
 			Args: []interface{}{
-				config.SystemConfigOwner,
+				config.FinalSystemOwner,
 				uint642Big(config.GasPriceOracleOverhead),
 				uint642Big(config.GasPriceOracleScalar),
 				config.BatchSenderAddress.Hash(), // left-padded 32 bytes value, version is zero anyway
 				gasLimit,
+				config.P2PSequencerAddress,
 			},
 		},
 		{
 			Name: "L2OutputOracle",
 			Args: []interface{}{
 				uint642Big(config.L2OutputOracleSubmissionInterval),
-				[32]byte(config.L2OutputOracleGenesisL2Output),
-				big.NewInt(0),
+				uint642Big(config.L2BlockTime),
 				big.NewInt(0),
 				uint642Big(uint64(config.L1GenesisBlockTimestamp)),
-				uint642Big(config.L2BlockTime),
 				config.L2OutputOracleProposer,
-				config.L2OutputOracleOwner,
+				config.L2OutputOracleChallenger,
 			},
 		},
 		{
@@ -332,19 +331,18 @@ func l1Deployer(backend *backends.SimulatedBackend, opts *bind.TransactOpts, dep
 			deployment.Args[2].(*big.Int),
 			deployment.Args[3].(common.Hash),
 			deployment.Args[4].(uint64),
+			deployment.Args[5].(common.Address),
 		)
 	case "L2OutputOracle":
 		_, tx, _, err = bindings.DeployL2OutputOracle(
 			opts,
 			backend,
 			deployment.Args[0].(*big.Int),
-			deployment.Args[1].([32]byte),
+			deployment.Args[1].(*big.Int),
 			deployment.Args[2].(*big.Int),
 			deployment.Args[3].(*big.Int),
-			deployment.Args[4].(*big.Int),
-			deployment.Args[5].(*big.Int),
-			deployment.Args[6].(common.Address),
-			deployment.Args[7].(common.Address),
+			deployment.Args[4].(common.Address),
+			deployment.Args[5].(common.Address),
 		)
 	case "OptimismPortal":
 		_, tx, _, err = bindings.DeployOptimismPortal(
@@ -400,6 +398,10 @@ func l1Deployer(backend *backends.SimulatedBackend, opts *bind.TransactOpts, dep
 		} else {
 			err = fmt.Errorf("unknown contract %s", deployment.Name)
 		}
+	}
+
+	if err != nil {
+		err = fmt.Errorf("cannot deploy %s: %w", deployment.Name, err)
 	}
 
 	return tx, err

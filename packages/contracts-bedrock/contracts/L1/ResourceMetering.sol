@@ -3,9 +3,8 @@ pragma solidity 0.8.15;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { SignedMath } from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import { FixedPointMathLib } from "@rari-capital/solmate/src/utils/FixedPointMathLib.sol";
 import { Burn } from "../libraries/Burn.sol";
+import { Arithmetic } from "../libraries/Arithmetic.sol";
 
 /**
  * @custom:upgradeable
@@ -17,6 +16,10 @@ abstract contract ResourceMetering is Initializable {
     /**
      * @notice Represents the various parameters that control the way in which resources are
      *         metered. Corresponds to the EIP-1559 resource metering system.
+     *
+     * @custom:field prevBaseFee   Base fee from the previous block(s).
+     * @custom:field prevBoughtGas Amount of gas bought so far in the current block.
+     * @custom:field prevBlockNum  Last block number that the base fee was updated.
      */
     struct ResourceParams {
         uint128 prevBaseFee;
@@ -48,6 +51,11 @@ abstract contract ResourceMetering is Initializable {
      * @notice Minimum base fee value, cannot go lower than this.
      */
     int256 public constant MINIMUM_BASE_FEE = 10_000;
+
+    /**
+     * @notice Maximum base fee value, cannot go higher than this.
+     */
+    int256 public constant MAXIMUM_BASE_FEE = int256(uint256(type(uint128).max));
 
     /**
      * @notice Initial base fee value.
@@ -89,12 +97,10 @@ abstract contract ResourceMetering is Initializable {
 
             // Update base fee by adding the base fee delta and clamp the resulting value between
             // min and max.
-            int256 newBaseFee = SignedMath.min(
-                SignedMath.max(
-                    int256(uint256(params.prevBaseFee)) + baseFeeDelta,
-                    int256(MINIMUM_BASE_FEE)
-                ),
-                int256(uint256(type(uint128).max))
+            int256 newBaseFee = Arithmetic.clamp(
+                int256(uint256(params.prevBaseFee)) + baseFeeDelta,
+                MINIMUM_BASE_FEE,
+                MAXIMUM_BASE_FEE
             );
 
             // If we skipped more than one block, we also need to account for every empty block.
@@ -104,20 +110,14 @@ abstract contract ResourceMetering is Initializable {
                 // Update the base fee by repeatedly applying the exponent 1-(1/change_denominator)
                 // blockDiff - 1 times. Simulates multiple empty blocks. Clamp the resulting value
                 // between min and max.
-                newBaseFee = SignedMath.min(
-                    SignedMath.max(
-                        int256(
-                            (newBaseFee *
-                                (
-                                    FixedPointMathLib.powWad(
-                                        1e18 - (1e18 / BASE_FEE_MAX_CHANGE_DENOMINATOR),
-                                        int256((blockDiff - 1) * 1e18)
-                                    )
-                                )) / 1e18
-                        ),
-                        int256(MINIMUM_BASE_FEE)
+                newBaseFee = Arithmetic.clamp(
+                    Arithmetic.cdexp(
+                        newBaseFee,
+                        BASE_FEE_MAX_CHANGE_DENOMINATOR,
+                        int256(blockDiff - 1)
                     ),
-                    int256(uint256(type(uint128).max))
+                    MINIMUM_BASE_FEE,
+                    MAXIMUM_BASE_FEE
                 );
             }
 

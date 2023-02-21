@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.33
+
+### Patch Changes
+
+- 33acb7c6a: Has l2geth return a NonceToHigh response if the txn nonce is greater than the expected nonce.
+
+## 0.5.32
+
+### Patch Changes
+
+- ea817097b: Use default cas gap of 25 million
+
+## 0.5.31
+
+### Patch Changes
+
+- ccbca22c3: Patch release for additional instrumentation for the Bedrock upgrade.
+
+## 0.5.30
+
+### Patch Changes
+
+- 0e8652c29: Close down the syncservice more cleanly
+
 ## 0.5.29
 
 ### Patch Changes

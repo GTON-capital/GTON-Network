@@ -18,13 +18,16 @@ import (
 type l2EthClient interface {
 	InfoByHash(ctx context.Context, hash common.Hash) (eth.BlockInfo, error)
 	// GetProof returns a proof of the account, it may return a nil result without error if the address was not found.
-	GetProof(ctx context.Context, address common.Address, blockTag string) (*eth.AccountResult, error)
+	// Optionally keys of the account storage trie can be specified to include with corresponding values in the proof.
+	GetProof(ctx context.Context, address common.Address, storage []common.Hash, blockTag string) (*eth.AccountResult, error)
 }
 
 type driverClient interface {
 	SyncStatus(ctx context.Context) (*eth.SyncStatus, error)
 	BlockRefWithStatus(ctx context.Context, num uint64) (eth.L2BlockRef, *eth.SyncStatus, error)
 	ResetDerivationPipeline(context.Context) error
+	StartSequencer(ctx context.Context, blockHash common.Hash) error
+	StopSequencer(context.Context) (common.Hash, error)
 }
 
 type rpcMetrics interface {
@@ -48,6 +51,18 @@ func (n *adminAPI) ResetDerivationPipeline(ctx context.Context) error {
 	recordDur := n.m.RecordRPCServerRequest("admin_resetDerivationPipeline")
 	defer recordDur()
 	return n.dr.ResetDerivationPipeline(ctx)
+}
+
+func (n *adminAPI) StartSequencer(ctx context.Context, blockHash common.Hash) error {
+	recordDur := n.m.RecordRPCServerRequest("admin_startSequencer")
+	defer recordDur()
+	return n.dr.StartSequencer(ctx, blockHash)
+}
+
+func (n *adminAPI) StopSequencer(ctx context.Context) (common.Hash, error) {
+	recordDur := n.m.RecordRPCServerRequest("admin_stopSequencer")
+	defer recordDur()
+	return n.dr.StopSequencer(ctx)
 }
 
 type nodeAPI struct {
@@ -85,7 +100,7 @@ func (n *nodeAPI) OutputAtBlock(ctx context.Context, number hexutil.Uint64) (*et
 		return nil, ethereum.NotFound
 	}
 
-	proof, err := n.client.GetProof(ctx, predeploys.L2ToL1MessagePasserAddr, ref.Hash.String())
+	proof, err := n.client.GetProof(ctx, predeploys.L2ToL1MessagePasserAddr, []common.Hash{}, ref.Hash.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get contract proof at block %s: %w", ref, err)
 	}

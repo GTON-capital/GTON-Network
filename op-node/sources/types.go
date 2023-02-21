@@ -4,18 +4,22 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/holiman/uint256"
 
-	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/trie"
+
+	"github.com/ethereum-optimism/optimism/op-node/eth"
 )
 
 type BatchCallContextFn func(ctx context.Context, b []rpc.BatchElem) error
+
+type CallContextFn func(ctx context.Context, result any, method string, args ...any) error
 
 // Note: these types are used, instead of the geth types, to enable:
 // - batched calls of many block requests (standard bindings do extra uncle-header fetches, cannot be batched nicely)
@@ -42,6 +46,7 @@ type HeaderInfo struct {
 	baseFee     *big.Int
 	txHash      common.Hash
 	receiptHash common.Hash
+	gasUsed     uint64
 }
 
 var _ eth.BlockInfo = (*HeaderInfo)(nil)
@@ -84,6 +89,10 @@ func (info *HeaderInfo) ID() eth.BlockID {
 
 func (info *HeaderInfo) ReceiptHash() common.Hash {
 	return info.receiptHash
+}
+
+func (info *HeaderInfo) GasUsed() uint64 {
+	return info.gasUsed
 }
 
 type rpcHeader struct {
@@ -178,6 +187,7 @@ func (hdr *rpcHeader) Info(trustCache bool, mustBePostMerge bool) (*HeaderInfo, 
 		baseFee:     (*big.Int)(hdr.BaseFee),
 		txHash:      hdr.TxHash,
 		receiptHash: hdr.ReceiptHash,
+		gasUsed:     uint64(hdr.GasUsed),
 	}
 	return &info, nil
 }
@@ -257,4 +267,28 @@ func (block *rpcBlock) ExecutionPayload(trustCache bool) (*eth.ExecutionPayload,
 		BlockHash:     block.Hash,
 		Transactions:  opaqueTxs,
 	}, nil
+}
+
+// blockHashParameter is used as "block parameter":
+// Some Nethermind and Alchemy RPC endpoints require an object to identify a block, instead of a string.
+type blockHashParameter struct {
+	BlockHash common.Hash `json:"blockHash"`
+}
+
+// unusableMethod identifies if an error indicates that the RPC method cannot be used as expected:
+// if it's an unknown method, or if parameters were invalid.
+func unusableMethod(err error) bool {
+	if rpcErr, ok := err.(rpc.Error); ok {
+		code := rpcErr.ErrorCode()
+		// method not found, or invalid params
+		if code == -32601 || code == -32602 {
+			return true
+		}
+	} else {
+		errText := strings.ToLower(err.Error())
+		if strings.Contains(errText, "unknown method") || strings.Contains(errText, "invalid param") || strings.Contains(errText, "is not available") {
+			return true
+		}
+	}
+	return false
 }

@@ -4,16 +4,13 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
-	"fmt"
 	"io"
 	"math/big"
 
-	"github.com/urfave/cli"
-
-	"github.com/ethereum-optimism/optimism/op-node/flags"
-	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
+	"github.com/ethereum-optimism/optimism/op-node/rollup"
 )
 
 var SigningDomainBlocksV1 = [32]byte{}
@@ -23,7 +20,7 @@ type Signer interface {
 	io.Closer
 }
 
-func SigningHash(domain [32]byte, chainID *big.Int, payloadBytes []byte) (common.Hash, error) {
+func LegacySigningHash(domain [32]byte, chainID *big.Int, payloadBytes []byte) (common.Hash, error) {
 	var msgInput [32 + 32 + 32]byte
 	// domain: first 32 bytes
 	copy(msgInput[:32], domain[:])
@@ -38,24 +35,48 @@ func SigningHash(domain [32]byte, chainID *big.Int, payloadBytes []byte) (common
 	return crypto.Keccak256Hash(msgInput[:]), nil
 }
 
+func SigningHash(domain [32]byte, chainID *big.Int, payloadBytes []byte) (common.Hash, error) {
+	var msgInput [32 + 32 + 32]byte
+	// domain: first 32 bytes
+	copy(msgInput[:32], domain[:])
+	// chain_id: second 32 bytes
+	if chainID.BitLen() > 256 {
+		return common.Hash{}, errors.New("chain_id is too large")
+	}
+	chainID.FillBytes(msgInput[32:64])
+	// payload_hash: third 32 bytes, hash of encoded payload
+	copy(msgInput[64:], crypto.Keccak256(payloadBytes))
+
+	return crypto.Keccak256Hash(msgInput[:]), nil
+}
+
 func BlockSigningHash(cfg *rollup.Config, payloadBytes []byte) (common.Hash, error) {
 	return SigningHash(SigningDomainBlocksV1, cfg.L2ChainID, payloadBytes)
 }
 
+func LegacyBlockSigningHash(cfg *rollup.Config, payloadBytes []byte) (common.Hash, error) {
+	return LegacySigningHash(SigningDomainBlocksV1, cfg.L2ChainID, payloadBytes)
+}
+
 // LocalSigner is suitable for testing
 type LocalSigner struct {
-	priv *ecdsa.PrivateKey
+	priv   *ecdsa.PrivateKey
+	hasher func(domain [32]byte, chainID *big.Int, payloadBytes []byte) (common.Hash, error)
+}
+
+func NewLegacyLocalSigner(priv *ecdsa.PrivateKey) *LocalSigner {
+	return &LocalSigner{priv: priv, hasher: LegacySigningHash}
 }
 
 func NewLocalSigner(priv *ecdsa.PrivateKey) *LocalSigner {
-	return &LocalSigner{priv: priv}
+	return &LocalSigner{priv: priv, hasher: SigningHash}
 }
 
 func (s *LocalSigner) Sign(ctx context.Context, domain [32]byte, chainID *big.Int, encodedMsg []byte) (sig *[65]byte, err error) {
 	if s.priv == nil {
 		return nil, errors.New("signer is closed")
 	}
-	signingHash, err := SigningHash(domain, chainID, encodedMsg)
+	signingHash, err := s.hasher(domain, chainID, encodedMsg)
 	if err != nil {
 		return nil, err
 	}
@@ -79,28 +100,6 @@ func (p *PreparedSigner) SetupSigner(ctx context.Context) (Signer, error) {
 	return p.Signer, nil
 }
 
-// TODO: implement remote signer setup (config to authenticated endpoint)
-// and remote signer itself (e.g. a open http client to make signing requests)
-
 type SignerSetup interface {
 	SetupSigner(ctx context.Context) (Signer, error)
-}
-
-// LoadSignerSetup loads a configuration for a Signer to be set up later
-func LoadSignerSetup(ctx *cli.Context) (SignerSetup, error) {
-	key := ctx.GlobalString(flags.SequencerP2PKeyFlag.Name)
-	if key != "" {
-		// Mnemonics are bad because they leak *all* keys when they leak.
-		// Unencrypted keys from file are bad because they are easy to leak (and we are not checking file permissions).
-		priv, err := crypto.HexToECDSA(key)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read batch submitter key: %w", err)
-		}
-
-		return &PreparedSigner{Signer: NewLocalSigner(priv)}, nil
-	}
-
-	// TODO: create remote signer
-
-	return nil, nil
 }

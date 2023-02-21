@@ -1,5 +1,43 @@
 # @eth-optimism/common-ts
 
+## 0.8.0
+
+### Minor Changes
+
+- 4ae94b412: Add option to configure body parser
+
+### Patch Changes
+
+- 0e179781b: Fixes a minor bug where the provider name was incorrectly logged when using waitForProvider
+
+## 0.7.1
+
+### Patch Changes
+
+- f04e5db2d: Fix unknown option error in base service v2
+
+## 0.7.0
+
+### Minor Changes
+
+- ab8ec365c: Updates BaseServiceV2 so that options are secret by default. Services will have to explicitly mark options as "public" for those options to be logged and included in the metadata metric.
+- 9b2891852: Refactors BaseServiceV2 slightly, merges standard options with regular options
+
+### Patch Changes
+
+- e23f60f63: Fixes a bug in BaseServiceV2 where options were not being parsed correctly when passed into the constructor rather than via environment variables or command line arguments
+- c6c9c7dbf: Adds a function for waiting for ethers providers
+- ffcee1013: Make logLevel a default option of BaseServiceV2
+- eceb0de1d: Adds new standard options to disable parsing variables from environment and command line.
+
+## 0.6.8
+
+### Patch Changes
+
+- Updated dependencies [c975c9620]
+- Updated dependencies [136ea1785]
+  - @eth-optimism/core-utils@0.12.0
+
 ## 0.6.7
 
 ### Patch Changes

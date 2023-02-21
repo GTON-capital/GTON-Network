@@ -1,6 +1,7 @@
 package immutables
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -24,6 +25,39 @@ type ImmutableValues map[string]any
 // contracts.
 type ImmutableConfig map[string]ImmutableValues
 
+// Check does a sanity check that the specific values that
+// Optimism uses are set inside of the ImmutableConfig.
+func (i ImmutableConfig) Check() error {
+	if _, ok := i["L2CrossDomainMessenger"]["otherMessenger"]; !ok {
+		return errors.New("L2CrossDomainMessenger otherMessenger not set")
+	}
+	if _, ok := i["L2StandardBridge"]["otherBridge"]; !ok {
+		return errors.New("L2StandardBridge otherBridge not set")
+	}
+	if _, ok := i["L2ERC721Bridge"]["messenger"]; !ok {
+		return errors.New("L2ERC721Bridge messenger not set")
+	}
+	if _, ok := i["L2ERC721Bridge"]["otherBridge"]; !ok {
+		return errors.New("L2ERC721Bridge otherBridge not set")
+	}
+	if _, ok := i["OptimismMintableERC721Factory"]["bridge"]; !ok {
+		return errors.New("OptimismMintableERC20Factory bridge not set")
+	}
+	if _, ok := i["OptimismMintableERC721Factory"]["remoteChainId"]; !ok {
+		return errors.New("OptimismMintableERC20Factory remoteChainId not set")
+	}
+	if _, ok := i["SequencerFeeVault"]["recipient"]; !ok {
+		return errors.New("SequencerFeeVault recipient not set")
+	}
+	if _, ok := i["L1FeeVault"]["recipient"]; !ok {
+		return errors.New("L1FeeVault recipient not set")
+	}
+	if _, ok := i["BaseFeeVault"]["recipient"]; !ok {
+		return errors.New("BaseFeeVault recipient not set")
+	}
+	return nil
+}
+
 // DeploymentResults represents the output of deploying each of the
 // contracts so that the immutables can be set properly in the bytecode.
 type DeploymentResults map[string]hexutil.Bytes
@@ -31,6 +65,10 @@ type DeploymentResults map[string]hexutil.Bytes
 // BuildOptimism will deploy the L2 predeploys so that their immutables are set
 // correctly.
 func BuildOptimism(immutable ImmutableConfig) (DeploymentResults, error) {
+	if err := immutable.Check(); err != nil {
+		return DeploymentResults{}, err
+	}
+
 	deployments := []deployer.Constructor{
 		{
 			Name: "GasPriceOracle",
@@ -96,6 +134,9 @@ func BuildOptimism(immutable ImmutableConfig) (DeploymentResults, error) {
 				predeploys.L2ERC721BridgeAddr,
 				immutable["OptimismMintableERC721Factory"]["remoteChainId"],
 			},
+		},
+		{
+			Name: "LegacyERC20ETH",
 		},
 	}
 	return BuildL2(deployments)
@@ -187,6 +228,8 @@ func l2Deployer(backend *backends.SimulatedBackend, opts *bind.TransactOpts, dep
 			return nil, fmt.Errorf("invalid type for remoteChainId")
 		}
 		_, tx, _, err = bindings.DeployOptimismMintableERC721Factory(opts, backend, bridge, remoteChainId)
+	case "LegacyERC20ETH":
+		_, tx, _, err = bindings.DeployLegacyERC20ETH(opts, backend)
 	default:
 		return tx, fmt.Errorf("unknown contract: %s", deployment.Name)
 	}

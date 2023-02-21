@@ -2,7 +2,11 @@ package flags
 
 import (
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/ethereum-optimism/optimism/op-node/chaincfg"
+	"github.com/ethereum-optimism/optimism/op-node/sources"
 
 	"github.com/urfave/cli"
 )
@@ -33,6 +37,11 @@ var (
 		Usage:  "Rollup chain parameters",
 		EnvVar: prefixEnvVar("ROLLUP_CONFIG"),
 	}
+	Network = cli.StringFlag{
+		Name:   "network",
+		Usage:  fmt.Sprintf("Predefined network selection. Available networks: %s", strings.Join(chaincfg.AvailableNetworks(), ", ")),
+		EnvVar: prefixEnvVar("NETWORK"),
+	}
 	RPCListenAddr = cli.StringFlag{
 		Name:   "rpc.addr",
 		Usage:  "RPC listening address",
@@ -55,6 +64,16 @@ var (
 		Usage:  "Trust the L1 RPC, sync faster at risk of malicious/buggy RPC providing bad or inconsistent L1 data",
 		EnvVar: prefixEnvVar("L1_TRUST_RPC"),
 	}
+	L1RPCProviderKind = cli.GenericFlag{
+		Name: "l1.rpckind",
+		Usage: "The kind of RPC provider, used to inform optimal transactions receipts fetching, and thus reduce costs. Valid options: " +
+			EnumString[sources.RPCProviderKind](sources.RPCProviderKinds),
+		EnvVar: prefixEnvVar("L1_RPC_KIND"),
+		Value: func() *sources.RPCProviderKind {
+			out := sources.RPCKindBasic
+			return &out
+		}(),
+	}
 	L2EngineJWTSecret = cli.StringFlag{
 		Name:        "l2.jwt-secret",
 		Usage:       "Path to JWT secret key. Keys are 32 bytes, hex encoded in a file. A new key will be generated if left empty.",
@@ -74,6 +93,11 @@ var (
 		Name:   "sequencer.enabled",
 		Usage:  "Enable sequencing of new L2 blocks. A separate batch submitter has to be deployed to publish the data for verifiers.",
 		EnvVar: prefixEnvVar("SEQUENCER_ENABLED"),
+	}
+	SequencerStoppedFlag = cli.BoolFlag{
+		Name:   "sequencer.stopped",
+		Usage:  "Initialize the sequencer in a stopped state. The sequencer can be started using the admin_startSequencer RPC",
+		EnvVar: prefixEnvVar("SEQUENCER_STOPPED"),
 	}
 	SequencerL1Confs = cli.Uint64Flag{
 		Name:     "sequencer.l1-confs",
@@ -159,23 +183,26 @@ var (
 		Name:   "heartbeat.url",
 		Usage:  "Sets the URL to heartbeat to",
 		EnvVar: prefixEnvVar("HEARTBEAT_URL"),
-		Value:  "https://heartbeat.bedrock-goerli.optimism.io",
+		Value:  "https://heartbeat.optimism.io",
 	}
 )
 
 var requiredFlags = []cli.Flag{
 	L1NodeAddr,
 	L2EngineAddr,
-	RollupConfig,
 	RPCListenAddr,
 	RPCListenPort,
 }
 
 var optionalFlags = append([]cli.Flag{
+	RollupConfig,
+	Network,
 	L1TrustRPC,
+	L1RPCProviderKind,
 	L2EngineJWTSecret,
 	VerifierL1Confs,
 	SequencerEnabledFlag,
+	SequencerStoppedFlag,
 	SequencerL1Confs,
 	L1EpochPollIntervalFlag,
 	LogLevelFlag,
@@ -207,8 +234,12 @@ func CheckRequired(ctx *cli.Context) error {
 		return fmt.Errorf("flag %s is required", L2EngineAddr.Name)
 	}
 	rollupConfig := ctx.GlobalString(RollupConfig.Name)
-	if rollupConfig == "" {
-		return fmt.Errorf("flag %s is required", RollupConfig.Name)
+	network := ctx.GlobalString(Network.Name)
+	if rollupConfig == "" && network == "" {
+		return fmt.Errorf("flag %s or %s is required", RollupConfig.Name, Network.Name)
+	}
+	if rollupConfig != "" && network != "" {
+		return fmt.Errorf("cannot specify both %s and %s", RollupConfig.Name, Network.Name)
 	}
 	rpcListenAddr := ctx.GlobalString(RPCListenAddr.Name)
 	if rpcListenAddr == "" {

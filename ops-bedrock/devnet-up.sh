@@ -34,7 +34,6 @@ L2_URL="http://localhost:9545"
 
 OP_NODE="$PWD/op-node"
 CONTRACTS_BEDROCK="$PWD/packages/contracts-bedrock"
-CONTRACTS_GOVERNANCE="$PWD/packages/contracts-governance"
 NETWORK=devnetL1
 DEVNET="$PWD/.devnet"
 
@@ -97,16 +96,12 @@ fi
 )
 
 L2OO_ADDRESS="0x6900000000000000000000000000000000000000"
-SEQUENCER_GENESIS_HASH="$(jq -r '.l2.hash' < $DEVNET/rollup.json)"
-SEQUENCER_BATCH_INBOX_ADDRESS="$(cat $DEVNET/rollup.json | jq -r '.batch_inbox_address')"
 
 # Bring up everything else.
 (
   cd ops-bedrock
   echo "Bringing up devnet..."
   L2OO_ADDRESS="$L2OO_ADDRESS" \
-      SEQUENCER_GENESIS_HASH="$SEQUENCER_GENESIS_HASH" \
-      SEQUENCER_BATCH_INBOX_ADDRESS="$SEQUENCER_BATCH_INBOX_ADDRESS" \
       docker-compose up -d op-proposer op-batcher
 
   echo "Bringing up stateviz webserver..."

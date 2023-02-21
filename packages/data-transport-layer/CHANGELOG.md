@@ -1,5 +1,59 @@
 # data transport layer
 
+## 0.5.53
+
+### Patch Changes
+
+- Updated dependencies [0e179781b]
+- Updated dependencies [4ae94b412]
+  - @eth-optimism/common-ts@0.8.0
+
+## 0.5.52
+
+### Patch Changes
+
+- Updated dependencies [f04e5db2d]
+  - @eth-optimism/common-ts@0.7.1
+
+## 0.5.51
+
+### Patch Changes
+
+- 4396e187d: Fixes a bug in the DTL that would cause it to not be able to sync beyond the deposit shutoff block.
+
+## 0.5.50
+
+### Patch Changes
+
+- 9b2891852: Refactors BaseServiceV2 slightly, merges standard options with regular options
+- Updated dependencies [e23f60f63]
+- Updated dependencies [ab8ec365c]
+- Updated dependencies [9b2891852]
+- Updated dependencies [d1f9098f9]
+- Updated dependencies [c6c9c7dbf]
+- Updated dependencies [ffcee1013]
+- Updated dependencies [eceb0de1d]
+  - @eth-optimism/common-ts@0.7.0
+  - @eth-optimism/contracts@0.5.40
+
+## 0.5.49
+
+### Patch Changes
+
+- 1d3c749a2: Bumps the version of ts-node used
+- 7c90d5a48: Patch for fast Goerli sync
+- 902985f2c: Add L1 sync shutoff block
+- 21ee72b3a: Give users a nicer revert when connected to wrong RPC
+- 36bd8fbff: Updates the DTL in preparation for shutoff during the Bedrock migration. So long, DTL!
+- e941ee73f: Fixes a bug with the DTL shutoff block logic
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [c975c9620]
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [136ea1785]
+  - @eth-optimism/contracts@0.5.39
+  - @eth-optimism/core-utils@0.12.0
+  - @eth-optimism/common-ts@0.6.8
+
 ## 0.5.48
 
 ### Patch Changes

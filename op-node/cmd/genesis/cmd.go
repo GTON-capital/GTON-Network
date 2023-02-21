@@ -3,7 +3,6 @@ package genesis
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -11,15 +10,11 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/ethereum-optimism/optimism/op-bindings/hardhat"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
-	"github.com/ethereum-optimism/optimism/op-node/eth"
-	"github.com/ethereum-optimism/optimism/op-node/rollup"
 )
 
 var Subcommands = cli.Commands{
@@ -71,7 +66,8 @@ var Subcommands = cli.Commands{
 				return err
 			}
 
-			rollupConfig, err := makeRollupConfig(config, l1StartBlock, l2Genesis)
+			l2GenesisBlock := l2Genesis.ToBlock()
+			rollupConfig, err := config.RollupConfig(l1StartBlock, l2GenesisBlock.Hash(), l2GenesisBlock.Number().Uint64())
 			if err != nil {
 				return err
 			}
@@ -117,28 +113,6 @@ var Subcommands = cli.Commands{
 				return err
 			}
 
-			if config.L1StartingBlockTag == nil {
-				return errors.New("must specify a starting block tag in genesis")
-			}
-			if config.L2GenesisBlockGasLimit == 0 { // TODO: this is a hotfix, need to set default values in more clean way + sanity check the config
-				config.L2GenesisBlockGasLimit = 15_000_000
-			}
-
-			client, err := ethclient.Dial(ctx.String("l1-rpc"))
-			if err != nil {
-				return err
-			}
-
-			var l1StartBlock *types.Block
-			if config.L1StartingBlockTag.BlockHash != nil {
-				l1StartBlock, err = client.BlockByHash(context.Background(), *config.L1StartingBlockTag.BlockHash)
-			} else if config.L1StartingBlockTag.BlockNumber != nil {
-				l1StartBlock, err = client.BlockByNumber(context.Background(), big.NewInt(config.L1StartingBlockTag.BlockNumber.Int64()))
-			}
-			if err != nil {
-				return fmt.Errorf("error getting l1 start block: %w", err)
-			}
-
 			depPath, network := filepath.Split(ctx.String("deployment-dir"))
 			hh, err := hardhat.New(network, nil, []string{depPath})
 			if err != nil {
@@ -153,13 +127,30 @@ var Subcommands = cli.Commands{
 			if err := config.Check(); err != nil {
 				return err
 			}
+
+			client, err := ethclient.Dial(ctx.String("l1-rpc"))
+			if err != nil {
+				return fmt.Errorf("cannot dial %s: %w", ctx.String("l1-rpc"), err)
+			}
+
+			var l1StartBlock *types.Block
+			if config.L1StartingBlockTag.BlockHash != nil {
+				l1StartBlock, err = client.BlockByHash(context.Background(), *config.L1StartingBlockTag.BlockHash)
+			} else if config.L1StartingBlockTag.BlockNumber != nil {
+				l1StartBlock, err = client.BlockByNumber(context.Background(), big.NewInt(config.L1StartingBlockTag.BlockNumber.Int64()))
+			}
+			if err != nil {
+				return fmt.Errorf("error getting l1 start block: %w", err)
+			}
+
 			// Build the developer L2 genesis block
 			l2Genesis, err := genesis.BuildL2DeveloperGenesis(config, l1StartBlock)
 			if err != nil {
 				return fmt.Errorf("error creating l2 developer genesis: %w", err)
 			}
 
-			rollupConfig, err := makeRollupConfig(config, l1StartBlock, l2Genesis)
+			l2GenesisBlock := l2Genesis.ToBlock()
+			rollupConfig, err := config.RollupConfig(l1StartBlock, l2GenesisBlock.Hash(), l2GenesisBlock.Number().Uint64())
 			if err != nil {
 				return err
 			}
@@ -175,46 +166,7 @@ var Subcommands = cli.Commands{
 	},
 }
 
-func makeRollupConfig(config *genesis.DeployConfig, l1StartBlock *types.Block, l2Genesis *core.Genesis) (*rollup.Config, error) {
-	if config.OptimismPortalProxy == (common.Address{}) {
-		return nil, errors.New("OptimismPortalProxy cannot be address(0)")
-	}
-	if config.SystemConfigProxy == (common.Address{}) {
-		return nil, errors.New("SystemConfigProxy cannot be address(0)")
-	}
-
-	return &rollup.Config{
-		Genesis: rollup.Genesis{
-			L1: eth.BlockID{
-				Hash:   l1StartBlock.Hash(),
-				Number: l1StartBlock.NumberU64(),
-			},
-			L2: eth.BlockID{
-				Hash:   l2Genesis.ToBlock().Hash(),
-				Number: 0,
-			},
-			L2Time: l1StartBlock.Time(),
-			SystemConfig: eth.SystemConfig{
-				BatcherAddr: config.BatchSenderAddress,
-				Overhead:    eth.Bytes32(common.BigToHash(new(big.Int).SetUint64(config.GasPriceOracleOverhead))),
-				Scalar:      eth.Bytes32(common.BigToHash(new(big.Int).SetUint64(config.GasPriceOracleScalar))),
-				GasLimit:    uint64(config.L2GenesisBlockGasLimit),
-			},
-		},
-		BlockTime:              config.L2BlockTime,
-		MaxSequencerDrift:      config.MaxSequencerDrift,
-		SeqWindowSize:          config.SequencerWindowSize,
-		ChannelTimeout:         config.ChannelTimeout,
-		L1ChainID:              new(big.Int).SetUint64(config.L1ChainID),
-		L2ChainID:              new(big.Int).SetUint64(config.L2ChainID),
-		P2PSequencerAddress:    config.P2PSequencerAddress,
-		BatchInboxAddress:      config.BatchInboxAddress,
-		DepositContractAddress: config.OptimismPortalProxy,
-		L1SystemConfigAddress:  config.SystemConfigProxy,
-	}, nil
-}
-
-func writeGenesisFile(outfile string, input interface{}) error {
+func writeGenesisFile(outfile string, input any) error {
 	f, err := os.OpenFile(outfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o755)
 	if err != nil {
 		return err

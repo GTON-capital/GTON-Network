@@ -22,7 +22,7 @@ const command = args[0]
   switch (command) {
     case 'decodeVersionedNonce': {
       const input = BigNumber.from(args[1])
-      const [nonce, version] = decodeVersionedNonce(input)
+      const { nonce, version } = decodeVersionedNonce(input)
 
       const output = utils.defaultAbiCoder.encode(
         ['uint256', 'uint256'],
@@ -165,7 +165,7 @@ const command = args[0]
       process.stdout.write(output)
       break
     }
-    case 'getFinalizeWithdrawalTransactionInputs': {
+    case 'getProveWithdrawalTransactionInputs': {
       const nonce = BigNumber.from(args[1])
       const sender = args[2]
       const target = args[3]

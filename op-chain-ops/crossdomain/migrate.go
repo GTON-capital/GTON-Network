@@ -10,32 +10,30 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var (
-	abiTrue = common.Hash{31: 0x01}
-	//errLegacyStorageSlotNotFound = errors.New("cannot find storage slot")
+	abiTrue                      = common.Hash{31: 0x01}
+	errLegacyStorageSlotNotFound = errors.New("cannot find storage slot")
 )
 
 // MigrateWithdrawals will migrate a list of pending withdrawals given a StateDB.
-func MigrateWithdrawals(withdrawals []*LegacyWithdrawal, db vm.StateDB, l1CrossDomainMessenger, l1StandardBridge *common.Address) error {
-	for _, legacy := range withdrawals {
+func MigrateWithdrawals(withdrawals []*LegacyWithdrawal, db vm.StateDB, l1CrossDomainMessenger *common.Address, noCheck bool) error {
+	for i, legacy := range withdrawals {
 		legacySlot, err := legacy.StorageSlot()
 		if err != nil {
 			return err
 		}
 
-		legacyValue := db.GetState(predeploys.LegacyMessagePasserAddr, legacySlot)
-		if legacyValue != abiTrue {
-			// TODO: Re-enable this once we have the exact data we need on mainnet.
-			// This is disabled because the data file we're using for testing was
-			// generated after the database dump, which means that there are extra
-			// storage slots in the state that don't show up in the withdrawals list.
-			// return fmt.Errorf("%w: %s", errLegacyStorageSlotNotFound, legacySlot)
-			continue
+		if !noCheck {
+			legacyValue := db.GetState(predeploys.LegacyMessagePasserAddr, legacySlot)
+			if legacyValue != abiTrue {
+				return fmt.Errorf("%w: %s", errLegacyStorageSlotNotFound, legacySlot)
+			}
 		}
 
-		withdrawal, err := MigrateWithdrawal(legacy, l1CrossDomainMessenger, l1StandardBridge)
+		withdrawal, err := MigrateWithdrawal(legacy, l1CrossDomainMessenger)
 		if err != nil {
 			return err
 		}
@@ -46,48 +44,18 @@ func MigrateWithdrawals(withdrawals []*LegacyWithdrawal, db vm.StateDB, l1CrossD
 		}
 
 		db.SetState(predeploys.L2ToL1MessagePasserAddr, slot, abiTrue)
+		log.Info("Migrated withdrawal", "number", i, "slot", slot)
 	}
 	return nil
 }
 
 // MigrateWithdrawal will turn a LegacyWithdrawal into a bedrock
 // style Withdrawal.
-func MigrateWithdrawal(withdrawal *LegacyWithdrawal, l1CrossDomainMessenger, l1StandardBridge *common.Address) (*Withdrawal, error) {
-	value := new(big.Int)
-
-	isFromL2StandardBridge := *withdrawal.Sender == predeploys.L2StandardBridgeAddr
-
-	if withdrawal.Target == nil {
-		return nil, errors.New("withdrawal target cannot be nil")
-	}
-
-	isToL1StandardBridge := *withdrawal.Target == *l1StandardBridge
-
-	if isFromL2StandardBridge && isToL1StandardBridge {
-		abi, err := bindings.L1StandardBridgeMetaData.GetAbi()
-		if err != nil {
-			return nil, err
-		}
-
-		method, err := abi.MethodById(withdrawal.Data)
-		if err != nil {
-			return nil, err
-		}
-		if method.Name == "finalizeETHWithdrawal" {
-			data, err := method.Inputs.Unpack(withdrawal.Data[4:])
-			if err != nil {
-				return nil, err
-			}
-			// bounds check
-			if len(data) < 3 {
-				return nil, errors.New("not enough data")
-			}
-			var ok bool
-			value, ok = data[2].(*big.Int)
-			if !ok {
-				return nil, errors.New("not big.Int")
-			}
-		}
+func MigrateWithdrawal(withdrawal *LegacyWithdrawal, l1CrossDomainMessenger *common.Address) (*Withdrawal, error) {
+	// Attempt to parse the value
+	value, err := withdrawal.Value()
+	if err != nil {
+		return nil, fmt.Errorf("cannot migrate withdrawal: %w", err)
 	}
 
 	abi, err := bindings.L1CrossDomainMessengerMetaData.GetAbi()
@@ -95,7 +63,12 @@ func MigrateWithdrawal(withdrawal *LegacyWithdrawal, l1CrossDomainMessenger, l1S
 		return nil, err
 	}
 
-	versionedNonce := EncodeVersionedNonce(withdrawal.Nonce, common.Big1)
+	// Migrated withdrawals are specified as version 0. Both the
+	// L2ToL1MessagePasser and the CrossDomainMessenger use the same
+	// versioning scheme. Both should be set to version 0
+	versionedNonce := EncodeVersionedNonce(withdrawal.Nonce, new(big.Int))
+	// Encode the call to `relayMessage` on the `CrossDomainMessenger`.
+	// The minGasLimit can safely be 0 here.
 	data, err := abi.Pack(
 		"relayMessage",
 		versionedNonce,
@@ -103,18 +76,21 @@ func MigrateWithdrawal(withdrawal *LegacyWithdrawal, l1CrossDomainMessenger, l1S
 		withdrawal.Target,
 		value,
 		new(big.Int),
-		withdrawal.Data,
+		[]byte(withdrawal.Data),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("cannot abi encode relayMessage: %w", err)
 	}
 
+	// Set the outer gas limit. This cannot be zero
+	gasLimit := uint64(len(data)*16 + 200_000)
+
 	w := NewWithdrawal(
-		withdrawal.Nonce,
+		versionedNonce,
 		&predeploys.L2CrossDomainMessengerAddr,
 		l1CrossDomainMessenger,
 		value,
-		new(big.Int),
+		new(big.Int).SetUint64(gasLimit),
 		data,
 	)
 	return w, nil

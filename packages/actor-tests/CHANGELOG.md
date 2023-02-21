@@ -1,5 +1,81 @@
 # @eth-optimism/actor-tests
 
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies [3c22333b8]
+- Updated dependencies [5372c9f5b]
+  - @eth-optimism/contracts-bedrock@0.11.4
+  - @eth-optimism/sdk@1.10.2
+
+## 0.0.18
+
+### Patch Changes
+
+- Updated dependencies [4964be480]
+  - @eth-optimism/contracts-bedrock@0.11.3
+  - @eth-optimism/sdk@1.10.1
+
+## 0.0.17
+
+### Patch Changes
+
+- Updated dependencies [8784bc0bc]
+  - @eth-optimism/contracts-bedrock@0.11.2
+  - @eth-optimism/sdk@1.9.1
+
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [fe80a9488]
+- Updated dependencies [827fc7b04]
+- Updated dependencies [a2166dcad]
+- Updated dependencies [ff09ec22d]
+- Updated dependencies [85dfa9fe2]
+- Updated dependencies [ba8b94a60]
+- Updated dependencies [d1f9098f9]
+- Updated dependencies [0f8fc58ad]
+- Updated dependencies [89f70c591]
+- Updated dependencies [03940c3cb]
+  - @eth-optimism/contracts-bedrock@0.11.1
+  - @eth-optimism/sdk@1.9.0
+
+## 0.0.15
+
+### Patch Changes
+
+- 1d3c749a2: Bumps the version of ts-node used
+- 1d3c749a2: Updates the version of TypeScript
+- Updated dependencies [43f33f39f]
+- Updated dependencies [237a351f1]
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [767585b07]
+- Updated dependencies [c975c9620]
+- Updated dependencies [1594678e0]
+- Updated dependencies [1d3c749a2]
+- Updated dependencies [136ea1785]
+- Updated dependencies [4d13f0afe]
+- Updated dependencies [7300a7ca7]
+  - @eth-optimism/contracts-bedrock@0.11.0
+  - @eth-optimism/sdk@1.8.0
+  - @eth-optimism/core-utils@0.12.0
+
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [c025a1153]
+- Updated dependencies [f8697a607]
+- Updated dependencies [59adcaa09]
+- Updated dependencies [c71500a7e]
+- Updated dependencies [f49b71d50]
+- Updated dependencies [1bfe79f20]
+- Updated dependencies [ccaf5bc83]
+  - @eth-optimism/contracts-bedrock@0.10.0
+  - @eth-optimism/sdk@1.7.0
+
 ## 0.0.13
 
 ### Patch Changes

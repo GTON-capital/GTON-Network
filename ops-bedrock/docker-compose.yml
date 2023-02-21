@@ -65,6 +65,7 @@ services:
       --metrics.addr=0.0.0.0
       --metrics.port=7300
       --pprof.enabled
+      --rpc.enable-admin
     ports:
       - "7545:8545"
       - "9003:9003"
@@ -118,16 +119,17 @@ services:
       OP_BATCHER_L1_ETH_RPC: http://l1:8545
       OP_BATCHER_L2_ETH_RPC: http://l2:8545
       OP_BATCHER_ROLLUP_RPC: http://op-node:8545
-      OP_BATCHER_MIN_L1_TX_SIZE_BYTES: 1
       OP_BATCHER_MAX_L1_TX_SIZE_BYTES: 120000
-      OP_BATCHER_CHANNEL_TIMEOUT: 40
+      OP_BATCHER_TARGET_L1_TX_SIZE_BYTES: 624
+      OP_BATCHER_TARGET_NUM_FRAMES: 1
+      OP_BATCHER_APPROX_COMPR_RATIO: 1.0
+      OP_BATCHER_SUB_SAFETY_MARGIN: 6 # SWS is 15, ChannelTimeout is 40
       OP_BATCHER_POLL_INTERVAL: 1s
       OP_BATCHER_NUM_CONFIRMATIONS: 1
       OP_BATCHER_SAFE_ABORT_NONCE_TOO_LOW_COUNT: 3
       OP_BATCHER_RESUBMISSION_TIMEOUT: 30s
       OP_BATCHER_MNEMONIC: test test test test test test test test test test test junk
       OP_BATCHER_SEQUENCER_HD_PATH: "m/44'/60'/0'/0/2"
-      OP_BATCHER_SEQUENCER_GENESIS_HASH: "${SEQUENCER_GENESIS_HASH}"
       OP_BATCHER_SEQUENCER_BATCH_INBOX_ADDRESS: "${SEQUENCER_BATCH_INBOX_ADDRESS}"
       OP_BATCHER_LOG_TERMINAL: "true"
       OP_BATCHER_PPROF_ENABLED: "true"

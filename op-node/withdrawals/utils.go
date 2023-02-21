@@ -91,7 +91,7 @@ loop:
 	}
 
 	// Now wait for it to be finalized
-	output, err := l2OO.GetL2Output(opts, l2BlockNumber)
+	output, err := l2OO.GetL2OutputAfter(opts, l2BlockNumber)
 	if err != nil {
 		return 0, err
 	}
@@ -129,53 +129,60 @@ type ReceiptClient interface {
 	TransactionReceipt(context.Context, common.Hash) (*types.Receipt, error)
 }
 
-// FinalizedWithdrawalParameters is the set of parameters to pass to the FinalizedWithdrawal function
-type FinalizedWithdrawalParameters struct {
+// ProvenWithdrawalParameters is the set of parameters to pass to the ProveWithdrawalTransaction
+// and FinalizeWithdrawalTransaction functions
+type ProvenWithdrawalParameters struct {
 	Nonce           *big.Int
 	Sender          common.Address
 	Target          common.Address
 	Value           *big.Int
 	GasLimit        *big.Int
-	BlockNumber     *big.Int
+	L2OutputIndex   *big.Int
 	Data            []byte
 	OutputRootProof bindings.TypesOutputRootProof
 	WithdrawalProof [][]byte // List of trie nodes to prove L2 storage
 }
 
-// FinalizeWithdrawalParameters queries L2 to generate all withdrawal parameters and proof necessary to finalize an withdrawal on L1.
+// ProveWithdrawalParameters queries L1 & L2 to generate all withdrawal parameters and proof necessary to prove a withdrawal on L1.
 // The header provided is very important. It should be a block (timestamp) for which there is a submitted output in the L2 Output Oracle
 // contract. If not, the withdrawal will fail as it the storage proof cannot be verified if there is no submitted state root.
-func FinalizeWithdrawalParameters(ctx context.Context, proofCl ProofClient, l2ReceiptCl ReceiptClient, txHash common.Hash, header *types.Header) (FinalizedWithdrawalParameters, error) {
+func ProveWithdrawalParameters(ctx context.Context, proofCl ProofClient, l2ReceiptCl ReceiptClient, txHash common.Hash, header *types.Header, l2OutputOracleContract *bindings.L2OutputOracleCaller) (ProvenWithdrawalParameters, error) {
 	// Transaction receipt
 	receipt, err := l2ReceiptCl.TransactionReceipt(ctx, txHash)
 	if err != nil {
-		return FinalizedWithdrawalParameters{}, err
+		return ProvenWithdrawalParameters{}, err
 	}
 	// Parse the receipt
 	ev, err := ParseMessagePassed(receipt)
 	if err != nil {
-		return FinalizedWithdrawalParameters{}, err
+		return ProvenWithdrawalParameters{}, err
 	}
 	// Generate then verify the withdrawal proof
 	withdrawalHash, err := WithdrawalHash(ev)
 	if !bytes.Equal(withdrawalHash[:], ev.WithdrawalHash[:]) {
-		return FinalizedWithdrawalParameters{}, errors.New("Computed withdrawal hash incorrectly")
+		return ProvenWithdrawalParameters{}, errors.New("Computed withdrawal hash incorrectly")
 	}
 	if err != nil {
-		return FinalizedWithdrawalParameters{}, err
+		return ProvenWithdrawalParameters{}, err
 	}
 	slot := StorageSlotOfWithdrawalHash(withdrawalHash)
 	p, err := proofCl.GetProof(ctx, predeploys.L2ToL1MessagePasserAddr, []string{slot.String()}, header.Number)
 	if err != nil {
-		return FinalizedWithdrawalParameters{}, err
+		return ProvenWithdrawalParameters{}, err
+	}
+
+	// Fetch the L2OutputIndex from the L2 Output Oracle caller (on L1)
+	l2OutputIndex, err := l2OutputOracleContract.GetL2OutputIndexAfter(&bind.CallOpts{}, header.Number)
+	if err != nil {
+		return ProvenWithdrawalParameters{}, fmt.Errorf("failed to get l2OutputIndex: %w", err)
 	}
 	// TODO: Could skip this step, but it's nice to double check it
 	err = VerifyProof(header.Root, p)
 	if err != nil {
-		return FinalizedWithdrawalParameters{}, err
+		return ProvenWithdrawalParameters{}, err
 	}
 	if len(p.StorageProof) != 1 {
-		return FinalizedWithdrawalParameters{}, errors.New("invalid amount of storage proofs")
+		return ProvenWithdrawalParameters{}, errors.New("invalid amount of storage proofs")
 	}
 
 	// Encode it as expected by the contract
@@ -184,14 +191,14 @@ func FinalizeWithdrawalParameters(ctx context.Context, proofCl ProofClient, l2Re
 		trieNodes[i] = common.FromHex(s)
 	}
 
-	return FinalizedWithdrawalParameters{
-		Nonce:       ev.Nonce,
-		Sender:      ev.Sender,
-		Target:      ev.Target,
-		Value:       ev.Value,
-		GasLimit:    ev.GasLimit,
-		BlockNumber: new(big.Int).Set(header.Number),
-		Data:        ev.Data,
+	return ProvenWithdrawalParameters{
+		Nonce:         ev.Nonce,
+		Sender:        ev.Sender,
+		Target:        ev.Target,
+		Value:         ev.Value,
+		GasLimit:      ev.GasLimit,
+		L2OutputIndex: l2OutputIndex,
+		Data:          ev.Data,
 		OutputRootProof: bindings.TypesOutputRootProof{
 			Version:                  [32]byte{}, // Empty for version 1
 			StateRoot:                header.Root,
